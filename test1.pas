@@ -1,6 +1,6 @@
 program test1;
 {$DEFINE DEBUG}
-{$I slackasm/jit.simba}
+{$I slackasm/asm.pas}
 {$X+}
 
 var

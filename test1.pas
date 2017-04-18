@@ -16,10 +16,10 @@ begin
   with assembler := TSlackASM.Create(2 shl 11) do
   try
     var myLabel := Location;     // set mylabel here
-    _addl (@x,   @y );           // b -> EAX, add EAX, a.
-    _imull(EAX);                 // imul eax, eax
+    _addl (@x,   @y );           // y -> EAX; add x, EAX. {does not write to y}
+    _imull(EAX      );           // imul eax, eax
     _clqd;                       // clqd
-    _idivl(@y       );           // EAX div B
+    _idivl(@y       );           // EAX div y
     _movl (EAX,  @z );           // EAX -> z
     _incl (@i       );           // inc i
     _movl (@i,   ECX);           // i -> ECX

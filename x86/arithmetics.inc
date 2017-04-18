@@ -1,7 +1,7 @@
 // ===========================================================================
-// AND - Logical And
+// CMP - Compare 
 
-// -- AND %reg, %reg -----------------------------
+// -- CMP %reg, %reg -----------------------------
 procedure TSlackASM._cmpb(src1, src2: TGPRegister8); overload;
 begin
   Self.WriteBytes([$38, _reg_reg(src1, src2)]);
@@ -17,7 +17,7 @@ begin
   Self.WriteBytes([$39, _reg_reg(src1, src2)]);
 end;
 
-// -- AND mem, %reg -------------------------------------
+// -- CMP mem, %reg -------------------------------------
 procedure TSlackASM._cmpb(mem: PInt8; reg: TGPRegister8); overload;
 begin
   Self.WriteBytes([$3A, _mem_reg(reg)]);
@@ -638,7 +638,7 @@ begin
   Self.WriteBytes([$D3, $C0+ord(reg)]);
 end;
 
-//SHR %cl, mem
+//ROL %cl, mem
 procedure TSlackASM._rolb(mem: PInt8); overload;
 begin
   Self.WriteBytes([$D2, $05]);
@@ -677,7 +677,7 @@ begin
   Self.WriteBytes([$D3, $C8+ord(reg)]);
 end;
 
-//SHR %cl, %mem
+//ROR %cl, %mem
 procedure TSlackASM._rorb(mem: PInt8); overload;
 begin
   Self.WriteBytes([$D2, $0D]);

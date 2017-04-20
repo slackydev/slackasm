@@ -5,7 +5,7 @@
   Some core types
 [-----------------------------------------------------------------------------}
 type
-  TExternalMethod = {$IFNDEF CodeInSight}external{$ENDIF} procedure();
+  TExternalMethod = {$IFNDEF CodeInSight}{$IFNDEF FPC}external{$ENDIF}{$ENDIF} procedure();
   PInt64 = ^Int64;
   PInt32 = ^Int32;
   PInt16 = ^Int16;

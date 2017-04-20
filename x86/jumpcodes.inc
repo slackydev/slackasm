@@ -1,5 +1,12 @@
+{-----------------------------------------------------------------------------]
+  Author: Jarl K. Holta
+  License: GNU Lesser GPL (http://www.gnu.org/licenses/lgpl.html)
+  
+  Jump instructions
+[-----------------------------------------------------------------------------}
+
 // ----------------------------------------------------------------------------
-// JMP | Unconditional jump
+// JMP - Unconditional jump
 procedure TSlackASM._jmp(dst: TGPRegister32); overload;
 begin
   Self.WriteBytes([$FF, Ord(dst)]);
@@ -11,7 +18,7 @@ begin
   Self.WriteAddr(dst);
 end;
 
-// JMP - relative position
+// JMP - Relative Position
 procedure TSlackASM._jmp(rel8: Int8); overload;
 begin
   if rel8 < 0 then rel8 -= 1; //remove self
@@ -72,7 +79,7 @@ procedure TSlackASM._jg(rel: Int32);  overload; begin Self._encodeJcc($7F, rel);
 procedure TSlackASM._jnle(rel: Int32);overload; begin Self._jg(rel);             end;
 
 procedure TSlackASM._jecxz(rel: Int8);overload; begin Self.WriteBytes([$E3, rel]) end;
-
+procedure TSlackASM._jcxz(rel: Int8); overload; begin Self._jecxz(rel) end;
 
 
 

@@ -1,0 +1,28 @@
+program testVariousShit;
+{$H-}
+{$I slackasm/asm.pas}
+{$X+}
+
+var i: Int32 = 0;
+begin
+  //just verifying the machine code..
+  var assembler := TSlackASM.Create(2 shl 11, True);
+  assembler._movl(@i,   EAX);
+  assembler._movl(@i,   ECX);
+
+  assembler._addl(4-ESP,  EAX);
+  assembler._addl(4-EBP,  EAX);
+
+  assembler._movl(4-ESP,  ECX);
+  assembler._movl(4-EBP,  ECX);
+
+  assembler._movl(ECX, 4-ESP);
+  assembler._movl(ECX, 4-EBP);
+
+  assembler._addl(@i,  EAX);
+  assembler._ret;
+
+  assembler.Finalize();
+  WriteLn(assembler.Debug);
+  assembler.Free(True);
+end.

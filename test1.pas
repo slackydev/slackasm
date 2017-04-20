@@ -18,15 +18,17 @@ begin
     var myLabel := Location;     // set mylabel here
     _addl (@x,   @y );           // y -> EAX; add x, EAX. {does not write to y}
     _imull(EAX      );           // imul eax, eax
-    _clqd;                       // clqd
+    _cltq;                       // convert long to quad
     _idivl(@y       );           // EAX div y
     _movl (EAX,  @z );           // EAX -> z
     _incl (@i       );           // inc i
     _movl (@i,   ECX);           // i -> ECX
     _cmpl (@lim, ECX);           // cmp lim ecx
     _jle  (Rel(myLabel));        // if lim <= ecx then goto myLabel
+    _ret;
     Method := Finalize();        // "Build" the method
   finally
+    //WriteLn(Debug);
     Free(False);
   end;
 

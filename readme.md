@@ -18,6 +18,7 @@ begin
     _addl (@y,   EAX);        // EAX := y + EAX
     _imull(@x,   EAX);        // EAX := x * EAX;
     _movl (EAX,  @y);         // y   := EAX;
+    _ret;
     callable := Finalize();   // "Build" the method
   finally
     Free(False);

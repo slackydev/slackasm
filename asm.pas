@@ -15,8 +15,14 @@ interface;
 const
   LineEnding = #13#10;
 
+{$IFDEF FPC}
+uses 
+  SysUtils, Windows;
+{$ELSE}
 function VirtualAlloc(lpAddress:Pointer; dwSize:PTRUINT; flAllocationType:DWORD;flProtect:DWORD):Pointer; external 'VirtualAlloc@Kernel32.dll stdcall';
 function VirtualFree(lpAddress:Pointer; dwSize:PTRUINT; dwFreeType:DWORD):Boolean; external 'VirtualFree@Kernel32.dll stdcall';
+{$ENDIF}
+
 
 type
   TSlackASM = {$IFDEF FPC}class{$ELSE}record{$ENDIF}
@@ -111,10 +117,12 @@ type
       procedure _movl(reg: TGPRegister32; stv: TStackVar); 
       procedure _movl(src: PInt32; dst: TGPRegister32);   
       procedure _movl(stv: TStackVar; reg: TGPRegister32); 
+      
       procedure _inc(reg: TGPRegister32); 
       procedure _incl(mem: PInt32); 
       procedure _dec(reg: TGPRegister32); 
       procedure _decl(mem: PInt32); 
+      
       procedure _cdq();
       procedure _cltq();
       procedure _cmpb(src, dst: TGPRegister8);  

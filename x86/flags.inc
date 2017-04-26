@@ -6,25 +6,34 @@
 [-----------------------------------------------------------------------------}
 
 // CMC - Complement Carry Flag
-procedure TSlackASM._cmc;  begin Self.WriteBytes([$F5]); end;
+function TSlackASM._cmc: TBytes;  begin Result := ToBytes([$F5]); end;
+
 // CLC - Clear Carry Flag
-procedure TSlackASM._clc;  begin Self.WriteBytes([$F8]); end;
+function TSlackASM._clc: TBytes;  begin Result := ToBytes([$F8]); end;
+
 // STC - Set Carry Flag
-procedure TSlackASM._stc;  begin Self.WriteBytes([$F9]); end;
+function TSlackASM._stc: TBytes;  begin Result := ToBytes([$F9]); end;
+
 // CLD - Clear Direction Flag
-procedure TSlackASM._cld;  begin Self.WriteBytes([$FC]); end;
+function TSlackASM._cld: TBytes;  begin Result := ToBytes([$FC]); end;
+
 // STD - Set Direction Flag
-procedure TSlackASM._std;  begin Self.WriteBytes([$FD]); end;
+function TSlackASM._std: TBytes;  begin Result := ToBytes([$FD]); end;
+
 // CLI - Clear Interrupt Flag
-procedure TSlackASM._cli;  begin Self.WriteBytes([$FA]); end;
+function TSlackASM._cli: TBytes;  begin Result := ToBytes([$FA]); end;
+
 // STI - Set Interrupt Flag
-procedure TSlackASM._sti;  begin Self.WriteBytes([$FB]); end;
+function TSlackASM._sti: TBytes;  begin Result := ToBytes([$FB]); end;
+
 // CLTS - Clear Task-Switched Flag in CR0
-procedure TSlackASM._clts; begin Self.WriteBytes([$0F, $06]); end;
+function TSlackASM._clts: TBytes; begin Result := ToBytes([$0F, $06]); end;
+
 // LAHF - Load Status Flags into AH Register
-procedure TSlackASM._lahf; begin Self.WriteBytes([$9F]); end;
+function TSlackASM._lahf: TBytes; begin Result := ToBytes([$9F]); end;
+
 // SAHF - Store AH into Flags
-procedure TSlackASM._sahf; begin Self.WriteBytes([$9E]); end;
+function TSlackASM._sahf: TBytes; begin Result := ToBytes([$9E]); end;
 
 
 

@@ -1,28 +1,31 @@
-program testVariousShit;
-{$H-}
-{$I slackasm/asm.pas}
+program test1;
+{$I slackasm/assembler.pas}
 {$X+}
 
-var i: Int32 = 0;
+var
+  assembler: TSlackASM;
+  Method: external procedure();
+var
+  byt: Int32 = 4;
+  x: Int32;
 begin
-  //just verifying the machine code..
-  var assembler := TSlackASM.Create(2 shl 11, True);
-  assembler._movl(@i,   EAX);
-  assembler._movl(@i,   ECX);
+  with assembler := TSlackASM.Create(2 shl 11) do
+  try
+    emit(_add(_AH, _CX));
+    emit(_add(_AH, ECX));
+    emit(_add(_AX, ECX));
+    emit(_add(EAX, ECX));
 
-  assembler._addl(4-ESP,  EAX);
-  assembler._addl(4-EBP,  EAX);
+    //emit(_inc(ECX));
+    //emit(_mov(ECX, @x));
+    emit(_ret);
+    Method := Finalize();
+  finally
+    WriteLn(Code);
+    Free(False);
+  end;
 
-  assembler._movl(4-ESP,  ECX);
-  assembler._movl(4-EBP,  ECX);
-
-  assembler._movl(ECX, 4-ESP);
-  assembler._movl(ECX, 4-EBP);
-
-  assembler._addl(@i,  EAX);
-  assembler._ret;
-
-  assembler.Finalize();
-  WriteLn(assembler.Debug);
-  assembler.Free(True);
+  //Method();
+  WriteLn([x]);
+  FreeMethod(@method);
 end.

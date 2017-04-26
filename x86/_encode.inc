@@ -5,34 +5,48 @@
   Various functions that makes producing the machinecode a little simpler
 [-----------------------------------------------------------------------------}
 
-function _reg_reg(reg1, reg2: TGPRegister32): Byte; overload; begin Result := $C0 + ord(reg1)*8 + ord(reg2); end;
-function _reg_reg(reg1, reg2: TGPRegister16): Byte; overload; begin Result := $C0 + ord(reg1)*8 + ord(reg2); end;
-function _reg_reg(reg1, reg2: TGPRegister8): Byte;  overload; begin Result := $C0 + ord(reg1)*8 + ord(reg2); end;
-
-function _mem_reg(reg: TGPRegister32): Byte; overload; begin Result := Ord(reg)*8 + $05; end;
-function _mem_reg(reg: TGPRegister16): Byte; overload; begin Result := Ord(reg)*8 + $05; end;
-function _mem_reg(reg: TGPRegister8): Byte;  overload; begin Result := Ord(reg)*8 + $05; end;
-
-function _stk_reg(stk:TStackVar; reg: TGPRegister32): Byte; overload;
+function long_to_bytes(myLong: Int32): TBytes;
 begin
-  if (Low(Int8) <= stk.Offset) and (High(Int8) <= stk.Offset) then
-    Result := Ord(reg)*8 + $44 + (Ord(stk.reg)-4)
-  else
-    Result := Ord(reg)*8 + $84 + (Ord(stk.reg)-4);
+  SetLength(Result, LONG_SIZE);
+  MemMove(myLong, Result[0], LONG_SIZE);
 end;
 
-function _stk_reg(stk:TStackVar; reg: TGPRegister16): Byte; overload;
+function addr_to_bytes(addr: Pointer): TBytes;
 begin
-  if (Low(Int8) <= stk.Offset) and (High(Int8) <= stk.Offset) then
-    Result := Ord(reg)*8 + $44 + (Ord(stk.reg)-4)
-  else
-    Result := Ord(reg)*8 + $84 + (Ord(stk.reg)-4);
+  SetLength(Result, PTR_SIZE);
+  MemMove(addr, Result[0], PTR_SIZE);
 end;
 
-function _stk_reg(stk:TStackVar; reg: TGPRegister8): Byte; overload;
+function __reg_operand2(reg1, reg2: Byte): Byte; overload; 
+begin 
+  Result := $C0 + reg2*8 + reg1; 
+end;
+
+function __mem_operand2(reg: Byte): Byte; overload;
+begin 
+  Result := reg*8 + $05; 
+end;
+
+
+// ----------------------------------------------------------------------------
+// OP register, register
+function _reg_operand(opcode:array of Byte; reg1, reg2: TGPRegister): TBytes; 
 begin
-  if (Low(Int8) <= stk.Offset) and (High(Int8) <= stk.Offset) then
-    Result := Ord(reg)*8 + $44 + (Ord(stk.reg)-4)
-  else
-    Result := Ord(reg)*8 + $84 + (Ord(stk.reg)-4);
+  Result := opcode + ToBytes([__reg_operand2(reg1.gpReg, reg2.gpReg)]);
+end;
+
+
+// ----------------------------------------------------------------------------
+// OP memory, register | OP register, memory
+function _mem_operand(opcode:array of Byte; mem: Pointer; reg: TGPRegister): TBytes;
+begin
+  Result := opcode + ToBytes([__mem_operand2(reg.gpReg)]) + addr_to_bytes(mem);
+end;
+
+
+// ----------------------------------------------------------------------------
+// OP memory
+function _mem_operand_no_reg(opcode:array of Byte; mem: Pointer): TBytes;
+begin
+  Result := opcode + addr_to_bytes(mem);
 end;

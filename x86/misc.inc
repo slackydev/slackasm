@@ -7,27 +7,15 @@
 
 // ----------------------------------------------------------------------------
 // return
-procedure TSlackASM._ret();
+function TSlackASM._ret(): TBytes;
 begin
-  WriteBytes([$C3]);
-end;
-
-// basic prologue
-procedure TSlackASM._prologue();   
-begin
-  Self.WriteBytes([$55]);          //  push rbp
-  Self.WriteBytes([$48,$89,$e5]);  //  mov  rbp, rsp
-end;
-
-// basic epilogue
-procedure TSlackASM._epilogue();   
-begin
-  Self.WriteBytes([$5d]);          // pop rbp  | restore old pointer  
+  Result := ToBytes([$C3]);
 end;
 
 
 // ----------------------------------------------------------------------------
 // Arithmetics intrinsics - higher level helpers
+(*
 procedure TSlackASM._addl(x,y: PInt32; store: TGPRegister32=EAX); overload;
 begin
   Self._movl(y, store);
@@ -44,4 +32,5 @@ procedure TSlackASM._imull(x,y: PInt32; store: TGPRegister32=EAX); overload;
 begin
   Self._movl(y, store);
   Self._imull(x, store);
-end; 
+end;
+*)

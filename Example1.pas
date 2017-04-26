@@ -26,21 +26,21 @@ begin
   //---- Now let's do that with assembly!
   with assembler := TSlackASM.Create(2 shl 11) do
   try
-    emit( _mov (@i,   EBX) );        // mov `i` to %ebx (it's kept in %ebx, throughout the loop)
+    code += _mov (@i,   EBX);        // mov `i` to %ebx (it's kept in %ebx, throughout the loop)
     var lbl1 := Location;            // make a label so we can jump here
     //loop body -->
-    emit( _mov (@x,   EAX) );        // mov `x` to %eax
-    emit( _add (@y,   EAX) );        // add `y` to %eax
-    emit( _imul(EAX      ) );        // imul %EAX            [think Sqr(EAX)]
-    emit( _cltq );                   // convert long to quad [div uses both EAX and EDX]
-    emit( _idiv(@y       ) );        // %eax div `y`         [EAX has result, EDX has remainder]
-    emit( _mov (EAX,  @z ) );        // mov %eax to `z`
-    emit( _inc (EBX      ) );        // inc %ebx             [our counter]
-    emit( _cmp (@lim, EBX) );        // compare `lim` to %ecx
-    emit( _jle (RelLoc(lbl1)));      // if lim <= ecx then goto lbl1
+    code += _mov (@x,   EAX);        // mov `x` to %eax
+    code += _add (@y,   EAX);        // add `y` to %eax
+    code += _imul(EAX      );        // imul %EAX            [think Sqr(EAX)]
+    code += _cltq;                   // convert long to quad [div uses both EAX and EDX]
+    code += _idiv(@y       );        // %eax div `y`         [EAX has result, EDX has remainder]
+    code += _mov (EAX,  @z );        // mov %eax to `z`
+    code += _inc (EBX      );        // inc %ebx             [our counter]
+    code += _cmp (@lim, EBX);        // compare `lim` to %ecx
+    code += _jle (RelLoc(lbl1));     // if lim <= ecx then goto lbl1
     //<-- loop end
-    emit( _mov (EBX,  @i ) );        // mov EBX to `i`
-    emit( _ret );                    // return
+    code += _mov (EBX,  @i );        // mov EBX to `i`
+    code += _ret;                    // return
     Method := Finalize();            // Build a function from the assembler
   finally
   //WriteLn(assembler.Code);         // (print the machinecode we produced)

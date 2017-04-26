@@ -23,7 +23,7 @@ begin
   WriteLn(Format('Used %4d ms', [GetTickCount()-t]),': ',  [x, y, z, i]);
 
 
-  //---- Now let's do that with assembly!
+  //---- Now let's do that with assembly (slightly different but achieves the same)
   with assembler := TSlackASM.Create(2 shl 11) do
   try
     code += _mov (@i,   EBX);        // mov `i` to %ebx (it's kept in %ebx, throughout the loop)
@@ -35,9 +35,9 @@ begin
     code += _cltq;                   // convert long to quad [div uses both EAX and EDX]
     code += _idiv(@y       );        // %eax div `y`         [EAX has result, EDX has remainder]
     code += _mov (EAX,  @z );        // mov %eax to `z`
-    code += _inc (EBX      );        // inc %ebx             [our counter]
-    code += _cmp (@lim, EBX);        // compare `lim` to %ecx
-    code += _jle (RelLoc(lbl1));     // if ecx <= lim then goto lbl1
+    code += _inc (EBX      );        // inc %ebx             [increase our counter]
+    code += _cmp (@lim, EBX);        // compare `lim` to %ebx
+    code += _jle (RelLoc(lbl1));     // if %ebx <= lim then goto lbl1
     //<-- loop end
     code += _mov (EBX,  @i );        // mov %ebx to `i`
     code += _ret;                    // return

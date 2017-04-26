@@ -31,15 +31,15 @@ begin
     //loop body -->
     code += _mov (@x,   EAX);        // mov `x` to %eax
     code += _add (@y,   EAX);        // add `y` to %eax
-    code += _imul(EAX      );        // imul %EAX            [think Sqr(EAX)]
+    code += _imul(EAX      );        // imul %eax            [think Sqr(EAX)]
     code += _cltq;                   // convert long to quad [div uses both EAX and EDX]
     code += _idiv(@y       );        // %eax div `y`         [EAX has result, EDX has remainder]
     code += _mov (EAX,  @z );        // mov %eax to `z`
     code += _inc (EBX      );        // inc %ebx             [our counter]
     code += _cmp (@lim, EBX);        // compare `lim` to %ecx
-    code += _jle (RelLoc(lbl1));     // if lim <= ecx then goto lbl1
+    code += _jle (RelLoc(lbl1));     // if ecx <= lim then goto lbl1
     //<-- loop end
-    code += _mov (EBX,  @i );        // mov EBX to `i`
+    code += _mov (EBX,  @i );        // mov %ebx to `i`
     code += _ret;                    // return
     Method := Finalize();            // Build a function from the assembler
   finally

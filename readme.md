@@ -14,7 +14,7 @@ var
   y: Int32 = 100;
   z: Int32;
 begin
-  // result -> x * (y - x)
+  // result -> (x + y) * x
   with assembler := TSlackASM.Create() do
   try
     code += _mov (@x,   EAX);        // EAX := x

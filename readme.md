@@ -1,6 +1,5 @@
 A small assembler in Lape, requires Simba 1.2+ or just the lape interpreter itself.
-For the most of it AT&T syntax is what's used, but as this is "function call based"
-we have to derail from time to time.
+Operations follow the same order as found in AT&T syntax, opcode names are a mixture of Intel and AT&T.
 
 
 Example:

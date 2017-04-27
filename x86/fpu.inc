@@ -26,7 +26,6 @@ begin
   Result := ToBytes([$DF, $05]) + addr_to_bytes(src);
 end;
 
-
 // ===========================================================================
 // FLD - Load Float To FPU Stack (And Convert To 80bit Float)
 
@@ -49,27 +48,29 @@ begin
 end;
 
 
+
+
+
 // ===========================================================================
 // FISTP - Store Integer To Memory And Pop
 
-// FISTPW m16
+// FISTP m16
 function TSlackASM._fistpw(dst: PInt16): TBytes; overload; 
 begin
   Result := ToBytes([$66, $DF, $1D]) + addr_to_bytes(dst);
 end;
 
-// FISTPL m32
+// FISTP m32
 function TSlackASM._fistpl(dst: PInt32): TBytes; overload; 
 begin
   Result := ToBytes([$DB, $1D]) + addr_to_bytes(dst);
 end;
 
-// FISTPQ m64
+// FISTP m64
 function TSlackASM._fistpq(dst: PInt64): TBytes; overload; 
 begin
   Result := ToBytes([$DD, $3D]) + addr_to_bytes(dst);
 end;
-
 
 // ===========================================================================
 // FSTP - Store Float To Memory And Pop
@@ -92,10 +93,8 @@ begin
   Result := ToBytes([$DD, $1D]) + addr_to_bytes(dst);
 end;
 
-
-
 // ===========================================================================
-// FIST - Store Integer To Memory And Pop
+// FIST - Store Integer To Memory
 
 // FISTW m16fp
 function TSlackASM._fistw(dst: PInt16): TBytes; overload; 
@@ -109,7 +108,6 @@ begin
   Result := ToBytes([$DB, $15]) + addr_to_bytes(dst);
 end;
 
-
 // ===========================================================================
 // FST - Store Float To Memory
 
@@ -119,17 +117,29 @@ begin
   Result := ToBytes([$DD, $D0+Ord(dst)]);
 end;
 
-// FSTS m32fp
+// FST m32fp
 function TSlackASM._fsts(dst: PSingle): TBytes; overload; 
 begin
   Result := ToBytes([$D9, $15]) + addr_to_bytes(dst);
 end;
 
-// FSTL m64fp
+// FST m64fp
 function TSlackASM._fstl(dst: PDouble): TBytes; overload; 
 begin
   Result := ToBytes([$DD, $15]) + addr_to_bytes(dst);
 end;
+
+
+
+
+// ===========================================================================
+// FFREE - Free the register operand (Marks as Unused)
+function TSlackASM._ffree(reg: TFPURegister): TBytes; 
+begin
+  Result := ToBytes([$DD, $D0+Ord(reg)]);
+end;
+
+
 
 
 // ===========================================================================
@@ -204,6 +214,7 @@ end;
 
 
 
+
 // ===========================================================================
 // FSUB - Floating Point Subtraction
 
@@ -260,6 +271,7 @@ function TSlackASM._fisubl(mem: PInt32): TBytes; overload;
 begin
   Result := ToBytes([_ARITH_OPC[7], _SUB_CONST[7]]) + addr_to_bytes(mem);
 end;
+
 
 
 
@@ -323,6 +335,7 @@ end;
 
 
 
+
 // ===========================================================================
 // FMUL - Floating Point Multiplication
 
@@ -382,6 +395,7 @@ end;
 
 
 
+
 // ===========================================================================
 // FDIV - Floating Point Division
 
@@ -437,6 +451,7 @@ function TSlackASM._fidivl(mem: PInt32): TBytes; overload;
 begin
   Result := ToBytes([_ARITH_OPC[7], _DIV_CONST[7]]) + addr_to_bytes(mem);
 end;
+
 
 
 
@@ -501,57 +516,119 @@ end;
 
 
 
-// ===========================================================================
-// FABS - Absolute Value - Clear the sign of st0
-function TSlackASM._fabs(): TBytes; overload; 
-begin
-  Result := ToBytes([$D9, $E1]);
-end;
+
 
 // ===========================================================================
-// FRNDINT - Round To Integer
-function TSlackASM._frndint(): TBytes; overload; 
-begin
-  Result := ToBytes([$D9, $FC]);
-end;
-
-// ===========================================================================
-// FTST - Test Floating Point Value
-function TSlackASM._ftst(): TBytes; overload; 
+// FTst - Test Floating Point Value
+function TSlackASM._ftst(): TBytes; 
 begin
   Result := ToBytes([$D9, $E4]);
 end;
 
 // ===========================================================================
-// FSQRT - Square Root
-function TSlackASM._fsqrt(): TBytes; overload; 
+// FXam - Examine Floating Point Value
+function TSlackASM._fxam(): TBytes; 
+begin
+  Result := ToBytes([$D9, $E5]);
+end;
+
+// ===========================================================================
+// FAbs - Absolute Value - Clear the sign of st0
+function TSlackASM._fabs(): TBytes;
+begin
+  Result := ToBytes([$D9, $E1]);
+end;
+
+// ===========================================================================
+// FRndInt - Round To Integer
+function TSlackASM._frndint(): TBytes;
+begin
+  Result := ToBytes([$D9, $FC]);
+end;
+
+// ===========================================================================
+// FSqrt - Square Root
+function TSlackASM._fsqrt(): TBytes;
 begin
   Result := ToBytes([$D9, $FA]);
 end;
 
 // ===========================================================================
-// FCOS - Cosine
-function TSlackASM._fcos(): TBytes; overload; 
+// FCos - Cosine
+function TSlackASM._fcos(): TBytes;
 begin
   Result := ToBytes([$D9, $FF]);
 end;
 
 // ===========================================================================
-// FSIN - Sine
-function TSlackASM._fsin(): TBytes; overload; 
+// FSin - Sine
+function TSlackASM._fsin(): TBytes;
 begin
   Result := ToBytes([$D9, $FE]);
 end;
 
 // ===========================================================================
-// FSINCOS - Sine and Consine
-function TSlackASM._fsincos(): TBytes; overload; 
+// FSinCos - Sine and Consine
+function TSlackASM._fsincos(): TBytes;
 begin
   Result := ToBytes([$D9, $FB]);
 end;
 
+// ===========================================================================
+// FPTan - Partial Tangent
+function TSlackASM._fptan(): TBytes;
+begin
+  Result := ToBytes([$D9, $F2]);
+end;
 
+// ===========================================================================
+// FPATan - Partial Arctangent
+function TSlackASM._fpatan(): TBytes;
+begin
+  Result := ToBytes([$D9, $F3]);
+end;
 
+// ===========================================================================
+// FPRem - Partial Remainder (Round to Zero)
+function TSlackASM._fprem(): TBytes;
+begin
+  Result := ToBytes([$D9, $F8]);
+end;
+
+// ===========================================================================
+// FPRem1 - Partial Remainder (Round to Nearest)
+function TSlackASM._fprem1(): TBytes;
+begin
+  Result := ToBytes([$D9, $F5]);
+end;
+
+// ===========================================================================
+// FScale - Scale
+function TSlackASM._fscale(): TBytes;
+begin
+  Result := ToBytes([$D9, $FD]);
+end;
+
+// ===========================================================================
+// FXtract - Extract Exponent and Mantissa
+function TSlackASM._fxtract(): TBytes;
+begin
+  Result := ToBytes([$D9, $F4]);
+end;
+
+// ===========================================================================
+// FYL2X - Compute "st1 * log_2(st0)" - Store in st1
+function TSlackASM._fyl2x(): TBytes;
+begin
+  Result := ToBytes([$D9, $F1]);
+end;
+
+// ===========================================================================
+// FYL2XP1 - Compute "st1 * log_2(st0 + 1.0)" - Store in st1
+function TSlackASM._fyl2xp1(): TBytes;
+begin
+  Result := ToBytes([$D9, $F9]);
+end;
 
 
 

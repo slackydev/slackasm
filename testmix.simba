@@ -6,26 +6,26 @@ var
   assembler: TSlackASM;
   Method: external procedure();
 var
-  byt: Int32 = 4;
-  x: Int32;
+  x,y: Int32;
+  test: Boolean;
 begin
+  x := 100;
+  y := 1000;
+
   with assembler := TSlackASM.Create(2 shl 11) do
   try
-    emit(_add(_AH, _CX));
-    emit(_add(_AH, ECX));
-    emit(_add(_AX, ECX));
-    emit(_add(EAX, ECX));
-
-    //emit(_inc(ECX));
-    //emit(_mov(ECX, @x));
-    emit(_ret);
+    code += _mov (@x, EAX);
+    code += _cmp (@y, EAX);
+    code += _setx(SETGE, _BH);
+    code += _mov (_BH, @test);
+    code += _ret;
     Method := Finalize();
   finally
     WriteLn(Code);
     Free(False);
   end;
 
-  //Method();
-  WriteLn([x]);
+  Method();
+  WriteLn([x,y, test]);
   FreeMethod(@method);
 end.

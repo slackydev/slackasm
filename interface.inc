@@ -24,6 +24,19 @@ type
 type
   TGPRegister = record
     gpReg, BaseOffset, Size: Byte;
+    
+    {$IFDEF FPC}
+      function Convert(Size: Byte): TGPRegister;
+      function Encode(opcode:array of Byte; other: TGPRegister; Offset:Byte=$C0): TBytes;
+      function Encode0F(opcode:array of Byte; other: TGPRegister; Offset:Byte=$C0): TBytes;
+      function EncodeHC(r8,r16,r32:array of Byte; other: TGPRegister; Offset:Byte=$C0): TBytes;
+      function EncodeMem(opcode:array of Byte; other: Pointer; Offset:Byte=$05): TBytes;
+      function EncodeMem0F(opcode:array of Byte; other: Pointer; otherSize:Int32; Offset:Byte=$05): TBytes;
+    {$ENDIF}
+  end;
+  
+  TPtrAtGPRegister = record
+    Reg: TGPRegister;
   end;
 
   // FPU registers
@@ -37,6 +50,17 @@ type
     st6 = 6,
     st7 = 7
   );
+  
+  // immediate value
+  TImmediate = record
+    Value:TBytes;
+    Size: Byte;
+    
+    {$IFDEF FPC}
+      function Slice(n: Int8=-1): TBytes;
+      function EncodeHC(r8,r16,r32:array of Byte; Other: TGPRegister): TBytes;
+    {$ENDIF}
+  end;
 
 
 const
@@ -98,72 +122,33 @@ const
   EDI: TGPRegister = [gpEDI, 1, 4];
   
 const
-  PTR_SIZE  = 4; //xxx
+  QUAD_SIZE = 8;
   LONG_SIZE = 4;
   WORD_SIZE = 2;
   BYTE_SIZE = 1;
+  PTR_SIZE  = SizeOf(NativeInt); //xxx - 32bit
 
 
-  
-{$IFDEF FPC}
-  function ToBytes(x: array of Byte): TBytes;
-  begin
-    SetLength(Result, Length(x));
-    MemMove(x[0], Result[0], Length(Result));
-  end;
-{$ENDIF}
-{$IFDEF LAPE}
-  type ToBytes = TBytes;
-{$ENDIF}
+//use with _setx
+type
+  E_SETxx = (
+    SETO  = $90, SETNO = $91, SETB  = $92, SETAE = $93, SETE  = $94, SETNE = $95, 
+    SETBE = $96, SETA  = $97, SETS  = $98, SETNS = $99, SETPE = $9A, SETPO = $9B, 
+    SETL  = $9C, SETGE = $9D, SETLE = $9E, SETG  = $9F
+  );
 
+const
+  SETC   = SETB;
+  SETNAE = SETB;
+  SETNB  = SETAE;
+  SETNC  = SETAE;
+  SETNZ  = SETNE;
+  SETNA  = SETBE;
+  SETNBE = SETA;
+  SETP   = SETPE;
+  SETNP  = SETPO;
+  SETNGE = SETL;
+  SETNL  = SETGE;
+  SETNG  = SETLE;
+  SETNLE = SETG;
 
-{$IFDEF LAPE}
-  function ToString(x: TBytes): string; override;
-  var i:Int32;
-  begin
-    Result := ''
-    for i:=0 to High(x) do
-      Result += IntToHex(x[i],2) + ' ';
-  end;
-
-  function ToString(x: TNativeCode): string; override;
-  var i:Int32;
-  begin
-    Result := ''
-    for i:=0 to High(x) do
-    begin
-      Result += ToString(x[i]);
-      if i < High(x) then Result += LineEnding;
-    end;
-  end;
-{$ENDIF}
-
-
-function SizeToAReg(Size: Byte): TGPRegister;
-begin
-  if      Size = BYTE_SIZE then Result := _AL
-  else if Size = WORD_SIZE then Result := _AX
-  else if Size = LONG_SIZE then Result := EAX;
-end;
-
-function RegBase(opBase:TBytes; reg: TGPRegister; Offset: Int16=0): TBytes;
-var i,j: Byte;
-begin
-  j := 0;
-  if reg.Size = 2 then
-  begin
-    SetLength(Result, Length(opBase)+1);
-    Result[0] := $66;
-    j := 1;
-  end else
-    SetLength(Result, Length(opBase));
-
-  Result[j] := opBase[0] + Offset + reg.BaseOffset;
-  for i:=1 to High(opBase) do
-    Result[i+j] := opBase[i];
-end;
-
-function RegBaseBySize(opBase:TBytes; Size: Byte; Offset: Int16=0): TBytes;
-begin
-  Result := RegBase(opBase, SizeToAReg(Size), Offset);
-end;

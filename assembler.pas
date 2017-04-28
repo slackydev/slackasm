@@ -474,9 +474,9 @@ end;
 
 function TImmediate.EncodeHC(r8,r16,r32:array of Byte; Other: TGPRegister): TBytes; {$IFDEF LAPE}constref;{$ENDIF}
 begin
-  if Length(r8)  > 0 then r8[0]  += other.gpReg;
-  if Length(r16) > 0 then r16[0] += other.gpReg;
-  if Length(r32) > 0 then r32[0] += other.gpReg;
+  if Length(r8)  > 0 then r8 [High(r8) ] += other.gpReg;
+  if Length(r16) > 0 then r16[High(r16)] += other.gpReg;
+  if Length(r32) > 0 then r32[High(r32)] += other.gpReg;
   case Other.size of
     BYTE_SIZE: Result :=         r8  + self.Slice(Other.size);
     WORD_SIZE: Result := [$66] + r16 + self.Slice(Other.size);

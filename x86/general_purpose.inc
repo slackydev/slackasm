@@ -11,7 +11,7 @@
 // -- MOV %reg, %reg --
 function TSlackASM._mov(x,y: TGPRegister): TBytes; overload; 
 begin
-  Result := y.Encode([$88], x);
+  Result := x.Encode([$88], y);
 end;
 
 // -- MOV %reg, mem --
@@ -221,10 +221,16 @@ begin
   Result := y.Encode([$00], x);
 end;
 
-// -- ADD mem,  %reg --
+// -- ADD mem, %reg --
 function TSlackASM._add(x: Pointer; y: TGPRegister): TBytes; overload;
 begin
   Result := y.EncodeMem([$02], x);
+end;
+
+// -- ADD imm, %reg --
+function TSlackASM._add(x: TImmediate; y: TGPRegister): TBytes; overload;
+begin                  {not sure why byte uses word prefix}
+  Result := x.EncodeHC([$66,$83,$C0],[$81,$C0],[$81,$C0], y);
 end;
 
 

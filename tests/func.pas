@@ -1,24 +1,25 @@
 program mul_func;
 {------------------------------------------------------------------------------]
- Shows what instructions we currently lack, as well as how to implement a native
- cdecl function in lape itself, using lapes "special" argument passing with
- this assembler.
-[------------------------------------------------------------------------------}
-{$I slackasm/assembler.pas}
-{$X+}
+ Shows what instructions we currently lack, as well as how to implement a
+ native cdecl function within lape itself, using lapes "special" argument
+ passing with this assembler.
 
-{------------------------------------------------------------------------------]
- Implementing the following native method:
-  ,----------------------------------------------------------.
-  | procedure Mul(const P: PParamArray; const Res: Pointer); |
-  | begin                                                    |
-  |   PInt32(Res)^ := PInt32(P^[0])^ * PInt32(P^[1])^;       |
-  | end;                                                     |
-  `----------------------------------------------------------´
+
+ The goal: Implementing the following native method:
+ ---------------------------------------------------
+  | procedure Mul(const P: PParamArray; const Res: Pointer); cdecl;
+  | begin
+  |   PInt32(Res)^ := PInt32(P^[0])^ * PInt32(P^[1])^;
+  | end;
+
  Lape implements argument passing as just a pointer to it's stack at the current
  offset -argcount or something, that's the whole PParamArray deal.
  While the result is just a direct pointer to the output variable.
 [------------------------------------------------------------------------------}
+{$I slackasm/assembler.pas}
+{$X+}
+
+
 function MulFunc(): Pointer;
 var
   assembler: TSlackASM;
@@ -39,7 +40,7 @@ begin
     code += _mov(esp,ebp);
 
     // load real args
-    mov_ebpx_edx(12);                    //resvar (Pointer)
+    mov_ebpx_edx(12);                    //Result pointer
     mov_ebpx_ebx(08);                    //argz (ptr to array [WORD] of Pointer)
 
     // load lape args
@@ -62,17 +63,17 @@ begin
 
     Result := Finalize();
   finally
-    WriteLn(Code);
+    //WriteLn(Code);
     Free(False);
   end;
 end;
 
 var
-  f: external function(x,y:Int32): Int32;
+  mul: external function(x,y:Int32): Int32;
 begin
-  f := MulFunc();
+  mul := MulFunc();
 
-  WriteLn f(20,5);
+  WriteLn mul(1000, 5);
 
-  FreeMethod(@f);
+  FreeMethod(@mul);
 end.

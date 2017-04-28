@@ -40,25 +40,15 @@ begin
 end;
 
 
-//Example: 
-// To do this: mov (%eax), %ecx
-//  A) _mov(ref(EAX), ECX);
-//  B) _mov(EAX is ref, ECX);
-//
-{$hints off}
+//Used to do this: mov (%eax), %ecx
+//  A) _mov(ref(eax), eax);
 function ref(Left: TGPRegister): TPtrAtGPRegister;
 begin
   Result.Reg := Left;
 end;
 
-function ref: Pointer; overload; begin Result = nil; end;
-operator is (Left: TGPRegister; Right:Pointer): TPtrAtGPRegister;
-begin
-  Result.Reg := Left;
-end;
-{$hints on}
 
-
+// immediate constructions
 function imm(v: Int32): TImmediate;
 begin
   Result.Size := LONG_SIZE;
@@ -87,6 +77,25 @@ begin
   MemMove(v, Result.Value[0], Result.Size);
 end;
 
+
+// stack variable construction
+operator + (reg:TGPRegister; offset:Int32): TStackVar;
+begin
+  Result.reg    := reg;
+  Result.offset := imm(offset);
+end;
+
+operator - (reg:TGPRegister; offset:Int32): TStackVar;
+begin
+  Result.reg    := reg;
+  Result.offset := imm(-offset);
+end;
+
+
+
+
+// ---------------------------------------------------------------------------
+// lape helpers bellow
 
 {$IFDEF LAPE}
   function ToString(x: TBytes): string; override;

@@ -63,6 +63,18 @@ type
   end;
 
 
+  //used for stack offsets
+  TStackVar = record
+    Reg: TGPRegister;
+    Offset: TImmediate;
+
+    {$IFDEF FPC}
+      function Slice(n: Int8=-1): TBytes;
+    {$ENDIF}
+  end;
+
+
+
 const
   // general purpose registers
   gpEAX = 0;
@@ -129,7 +141,7 @@ const
   PTR_SIZE  = SizeOf(NativeInt); //xxx - 32bit
 
 
-//use with _setx
+//use with _setc
 type
   E_SETxx = (
     SETO  = $90, SETNO = $91, SETB  = $92, SETAE = $93, SETE  = $94, SETNE = $95, 

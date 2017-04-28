@@ -159,8 +159,8 @@ type
       function _rol(x: Pointer; MemSize: Byte=LONG_SIZE): TBytes; overload;
       function _ror(x: TGPRegister): TBytes; overload;
       function _ror(x: Pointer; MemSize: Byte=LONG_SIZE): TBytes; overload;
-      function _setx(opcode:E_SETxx; dst: TGPRegister): TBytes; overload;
-      function _setx(opcode:E_SETxx; dst: Pointer): TBytes; overload;
+      function _setc(opcode:E_SETxx; dst: TGPRegister): TBytes; overload;
+      function _setc(opcode:E_SETxx; dst: Pointer): TBytes; overload;
       
       //FPU.inc
       function _fildw(src: PInt16): TBytes; overload; 
@@ -391,6 +391,7 @@ type ToBytes = TBytes;
 // TGPRegister
 function TGPRegister.Convert(Size: Byte): TGPRegister; {$IFDEF LAPE}constref;{$ENDIF}
 begin
+  Assert(Size in [1,2,4],'Illegal size');
   Result := EAX;
   case Size of
     BYTE_SIZE: Result := _AL;
@@ -483,6 +484,21 @@ begin
     LONG_SIZE: Result :=         r32 + self.Slice(Other.size);
     else       Result := [$90]; //NOP
   end;
+end;
+
+
+// ---------------------------------------------------------------------------
+// TStackVar
+function TStackVar.Encode(opcode:array of Byte; other: TGPRegister; Offset:Byte=$40): TBytes; {$IFDEF LAPE}constref;{$ENDIF}
+begin
+  opcode[0] += other.BaseOffset;
+  case other.Size of
+    BYTE_SIZE: Result :=         opcode + TBytes([other.gpReg*8 + self.reg.gpReg + Offset]);
+    WORD_SIZE: Result := [$66] + opcode + TBytes([other.gpReg*8 + self.reg.gpReg + Offset]);
+    LONG_SIZE: Result :=         opcode + TBytes([other.gpReg*8 + self.reg.gpReg + Offset]);
+    else       Result := [$90]; //NOP
+  end;
+  Result += self.Offset.value;
 end;
 
 

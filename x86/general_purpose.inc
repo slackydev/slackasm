@@ -6,6 +6,47 @@
 [-----------------------------------------------------------------------------}
 
 // ===========================================================================
+// PUSH - Push Word or Doubleword Onto the Stack
+function TSlackASM._push(x: TGPRegister): TBytes; overload; 
+begin
+  Assert(x.Size > 1, 'Illegal operand size');
+  if x.size = 2 then Result := ToBytes([$66, $50+x.gpReg])
+  else               Result := ToBytes([$50+x.gpReg]);
+end;
+
+function TSlackASM._push(x: Pointer; MemSize:Byte = 4): TBytes; overload; 
+begin
+  Assert(MemSize > 1, 'Illegal operand size');
+  Result := EAX.Convert(MemSize).EncodeMem([$FE], x, $35);
+end;
+
+function TSlackASM._push(x: TImmediate): TBytes; overload;
+begin
+  Assert(x.Size = 4, 'Illegal operand size');
+  Result := [68] + x.slice(4);
+end;
+
+
+
+// ===========================================================================
+// Pop - Pop a Value from the Stack
+function TSlackASM._pop(x: TGPRegister): TBytes; overload;
+begin
+  Assert(x.Size > 1, 'Illegal operand size');
+  if x.size = 2 then Result := ToBytes([$66, $58+x.gpReg])
+  else               Result := ToBytes([$58+x.gpReg]);
+end;
+
+function TSlackASM._pop(x: Pointer; MemSize:Byte = 4): TBytes; overload;
+begin
+  Assert(MemSize > 1, 'Illegal operand size');
+  Result := EAX.Convert(MemSize).EncodeMem([$8F], x, $35);
+end;
+
+
+
+
+// ===========================================================================
 // MOV - Move (Copy) Left Operand into Right Operand
 
 // -- MOV %reg, %reg --
@@ -44,6 +85,21 @@ begin
   Result := x.EncodeHC([$B0],[$B8],[$B8], y);
 end;
 
+// -- MOV $x(%reg), %reg --
+function TSlackASM._mov(x: TStackVar; y: TGPRegister): TBytes; overload;
+begin
+  Result := x.Encode([$8A], y, $80);
+end;
+
+// -- MOV %reg, $x(%reg) --
+function TSlackASM._mov(x: TGPRegister; y: TStackVar): TBytes; overload;
+begin
+  Result := y.Encode([$88], x, $80);
+end;
+
+
+
+
 
 // ===========================================================================
 // MOVZX - Move (Copy) Left Operand into Right Operand With Zero-Extend
@@ -51,20 +107,17 @@ end;
 // -- MOVZX %reg, %reg --
 function TSlackASM._movzx(x,y: TGPRegister): TBytes; overload; 
 begin
-  if (y.Size <= x.Size) or (y.Size < WORD_SIZE) then
-    WriteLn('movzx: Incompatible Operands Size: dest = ', y.Size, ', src = ', x.Size)
-  else
-    Result := y.Encode0F([$0F,$B6], x);
+  Assert((y.Size > x.Size) and (y.Size >= WORD_SIZE), 'Illegal operand size');
+  Result := y.Encode0F([$0F,$B6], x);
 end;
 
 // -- MOVZX mem, %reg --
 function TSlackASM._movzx(x: Pointer; y: TGPRegister; MemSize:Byte=BYTE_SIZE): TBytes; overload;
 begin
-  if (y.Size <= MemSize) or (y.Size < WORD_SIZE) then
-    WriteLn('movzx: Incompatible Operands Size: dest = ', y.Size, ', src = ', MemSize)
-  else
-    Result := y.EncodeMem0F([$0F,$B6], x, MemSize);
+  Assert((y.Size > MemSize) and (y.Size >= WORD_SIZE), 'Illegal operand size');
+  Result := y.EncodeMem0F([$0F,$B6], x, MemSize);
 end;
+
 
 
 
@@ -74,19 +127,15 @@ end;
 // -- MOVSX %reg, %reg --
 function TSlackASM._movsx(x,y: TGPRegister): TBytes; overload; 
 begin
-  if (y.Size <= x.Size) or (y.Size < WORD_SIZE) then
-    WriteLn('movsx: Incompatible Operands Size: dest = ', y.Size, ', src = ', x.Size)
-  else
-    Result := y.Encode0F([$0F,$BE], x);
+  Assert((y.Size > x.Size) and (y.Size >= WORD_SIZE), 'Illegal operand size');
+  Result := y.Encode0F([$0F,$BE], x);
 end;
 
 // -- MOVSX mem, %reg --
 function TSlackASM._movsx(x: Pointer; y: TGPRegister; MemSize:Byte=BYTE_SIZE): TBytes; overload; 
 begin
-  if (y.Size <= MemSize) or (y.Size < WORD_SIZE) then
-    WriteLn('movsx: Incompatible Operands Size: dest = ', y.Size, ', src = ', MemSize)
-  else
-    Result := y.EncodeMem0F([$0F,$BE], x, MemSize);
+  Assert((y.Size > MemSize) and (y.Size >= WORD_SIZE), 'Illegal operand size');
+  Result := y.EncodeMem0F([$0F,$BE], x, MemSize);
 end;
 
 
@@ -105,6 +154,7 @@ begin
 end;
 
 
+
 // ===========================================================================
 // DEC - Decrement Operand
 function TSlackASM._dec(x: TGPRegister): TBytes; overload;
@@ -118,6 +168,7 @@ begin
 end;
 
 
+
 // ===========================================================================
 // CDQ - Convert Doubleword to Quadword (EDX:EAX = sign-extend of EAX)
 function TSlackASM._cdq(): TBytes;
@@ -129,6 +180,7 @@ function TSlackASM._cltq(): TBytes;
 begin
   Result := Self._cdq();
 end;
+
 
 
 // ===========================================================================
@@ -145,6 +197,7 @@ function TSlackASM._cmp(x: Pointer; y: TGPRegister): TBytes; overload;
 begin
   Result := y.EncodeMem([$3A], x);
 end;
+
 
 
 // ===========================================================================
@@ -180,6 +233,7 @@ begin
 end;
 
 
+
 // ===========================================================================
 // OR - Logical Inclusive Or
 
@@ -212,6 +266,7 @@ begin
 end;
 
 
+
 // ===========================================================================
 // ADD - Addition
 
@@ -229,9 +284,10 @@ end;
 
 // -- ADD imm, %reg --
 function TSlackASM._add(x: TImmediate; y: TGPRegister): TBytes; overload;
-begin                  {not sure why byte uses word prefix}
+begin                  {not sure why byte uses word prefix here}
   Result := x.EncodeHC([$66,$83,$C0],[$81,$C0],[$81,$C0], y);
 end;
+
 
 
 // ===========================================================================
@@ -250,6 +306,7 @@ begin
 end;
 
 
+
 // ===========================================================================
 // SUB - Subtract
 
@@ -264,6 +321,7 @@ function TSlackASM._sub(x: Pointer; y: TGPRegister): TBytes; overload;
 begin 
   Result := y.EncodeMem([$2A], x);
 end;
+
 
 
 // ===========================================================================
@@ -282,6 +340,7 @@ begin
 end;
 
 
+
 // ===========================================================================
 // DIV - Unsigned division
 
@@ -296,6 +355,7 @@ function TSlackASM._div(x: Pointer; MemSize: Byte=LONG_SIZE): TBytes; overload;
 begin
   Result := EAX.Convert(MemSize).EncodeMem([$F6], x, $35);
 end;
+
 
 
 // ===========================================================================
@@ -350,23 +410,15 @@ end;
 // -- IMUL %reg, %reg --
 function TSlackASM._imul(x, y: TGPRegister): TBytes; overload;
 begin
-  if y.size = 1 then
-  begin
-    WriteLn('IMUL: Invalid operand size: 1');
-    Exit(_nop);
-  end;
+  Assert(y.Size > 1, 'Illegal operand size');
   Result := y.Encode([$0E, $AF], x);
 end;
 
 // -- IMUL mem,  %reg --
 function TSlackASM._imul(x: Pointer; y: TGPRegister): TBytes; overload;
 begin 
-  if y.Size = 1 then
-  begin
-    WriteLn('IMUL: Invalid operand size: 1');
-    Exit(_nop);
-  end;
-    Result := y.EncodeMem([$0E,$AF], x);
+  Assert(y.Size > 1, 'Illegal operand size');
+  Result := y.EncodeMem([$0E,$AF], x);
 end;
 
 
@@ -387,6 +439,7 @@ begin
 end;
 
 
+
 // ===========================================================================
 // SAR - Shift Arithmetic Right
 
@@ -401,6 +454,7 @@ function TSlackASM._sar(x: Pointer; MemSize: Byte=LONG_SIZE): TBytes; overload;
 begin
   Result := EAX.Convert(MemSize).EncodeMem([$D2], x, $3D);
 end;
+
 
 
 // ===========================================================================
@@ -472,16 +526,16 @@ end;
 
 
 // ===========================================================================
-// SETxx - Set Byte on Condition
+// SETcc - Set Byte on Condition
 
-// -- SETx %reg --
-function TSlackASM._setx(opcode:E_SETxx; dst: TGPRegister): TBytes; overload;
+// -- SETc %reg --
+function TSlackASM._setc(opcode:E_SETxx; dst: TGPRegister): TBytes; overload;
 begin
   Result := EAX.Encode0F([$0F, Ord(opcode)], dst.Convert(BYTE_SIZE));
 end;
 
 // -- SETx mem --
-function TSlackASM._setx(opcode:E_SETxx; dst: Pointer): TBytes; overload;
+function TSlackASM._setc(opcode:E_SETxx; dst: Pointer): TBytes; overload;
 begin
   Result := _AL.EncodeMem([$0F, Ord(opcode)], dst);
 end;

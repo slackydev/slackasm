@@ -12,9 +12,12 @@ begin
 
   with assembler := TSlackASM.Create(2 shl 11) do
   try
-    code += _mov(@x, EAX);
-    code += _add(imm(10), _AX);
-    code += _mov(_AX, @y);
+    WriteLn(_mov(ebp+12, eax));
+    WriteLn(_mov(ebp+12, ecx));
+
+    code += _mov(@x, eax);
+    code += _add(imm(10), _ax);
+    code += _mov(_ax, @y);
     code += _ret;
     Method := Finalize();
   finally
@@ -22,7 +25,7 @@ begin
     Free(False);
   end;
 
-  Method();
+  //Method();
   WriteLn([x,y]);
   FreeMethod(@method);
 end.

@@ -42,7 +42,7 @@ begin
     code += _mov(ref(ecx), ecx);         // mov contents of second arg to ecx
 
     // implementation
-    code += _imul(ECX, eax);
+    code += _imul(ecx, eax);
 
     // result
     code += _mov(eax, ref(edx));

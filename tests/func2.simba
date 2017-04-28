@@ -48,7 +48,7 @@ begin
     code += _mov (ebp-12,  ecx) + _mov(ref(ecx), ecx);
     code += _add (ecx,     eax);
 
-    code += _mov(ebp+12,  edx);
+    code += _mov(ebp+12, edx);
     code += _mov(eax, ref(edx));
   end;
 

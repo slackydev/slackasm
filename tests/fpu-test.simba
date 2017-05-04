@@ -30,7 +30,7 @@ begin
 end;
 
 
-function LapeMulFunc(DTYPE:Byte=szLONG): Pointer;
+function LapeFMulFunc(sz1,sz2: Byte): Pointer;
 const
   NUM_ARGS = 2;
 var
@@ -41,27 +41,23 @@ begin
 
   with assembler do
   begin
-    code += _mov(ebp-4, edx);
-    code += _movzx(ref(edx) is DTYPE, eax);
-    code += _mov(ebp-8, edx);
-    code += _movzx(ref(edx) is DTYPE, ecx);
-    code += _imul(ecx, eax);
-
-    code += _mov(ebp+12, edx);
-    code += _mov(eax, ref(edx));
+    code += _mov(ebp-4, ebx) + _fld(ref(ebx) is sz1);
+    code += _mov(ebp-8, ebx) + _fld(ref(ebx) is sz2);
+    code += _fmulp;
+    code += _mov(ebp+12, ebx);
+    code += _fstp(ref(ebx) is f64);
   end;
 
   LapeFuncEpilogue(assembler, NUM_ARGS);
   Result := assembler.Finalize();
-  //WriteLn assembler.Code;
   assembler.Free(False);
 end;
 
 
 var
-  mul: external function(x,y:Int32): Int32;
+  fmul: external function(x:Single; y:Double): Double;
 begin
-  mul := LapeMulFunc( SizeOf(Int32) );
-  WriteLn mul(62000, 2);
-  FreeMethod(@mul);
+  fmul := LapeFMulFunc(f32,f64);
+  WriteLn fmul(62000, 2);
+  FreeMethod(@fmul);
 end.

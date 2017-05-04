@@ -13,9 +13,11 @@ begin
   Result := ToBytes([$FF, dst.gpReg]);
 end;
 
-function TSlackASM._jmp(dst: Pointer): TBytes; overload;
+function TSlackASM._jmp(dst: TMemVar): TBytes; overload;
 begin
-  Result := ToBytes([$FF, $25]) + addr_to_bytes(dst);
+  Assert(dst.Size = 4, 'Illegal operand size');
+  Result := dst.Encode([$FF], EAX, $20+Ord(dst.MemType));
+  //Result := ToBytes([$FF, $25]) + addr_to_bytes(dst);
 end;
 
 // JMP - Relative Position

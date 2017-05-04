@@ -7,17 +7,13 @@ var
   Method: external procedure();
 var
   x,y: Int32;
+  b: Boolean;
 begin
   x := 100;
-
+  y := 10;
   with assembler := TSlackASM.Create(2 shl 11) do
   try
-    WriteLn(_mov(ebp+12, eax));
-    WriteLn(_mov(ebp+12, ecx));
-
-    code += _mov(@x, eax);
-    code += _add(imm(10), _ax);
-    code += _mov(_ax, @y);
+    code += _imul(ecx, eax);
     code += _ret;
     Method := Finalize();
   finally
@@ -26,6 +22,6 @@ begin
   end;
 
   //Method();
-  WriteLn([x,y]);
+  WriteLn([x, y, b]);
   FreeMethod(@method);
 end.

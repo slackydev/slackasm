@@ -24,32 +24,24 @@ type
 type
   TGPRegister = record
     gpReg, BaseOffset, Size: Byte;
-    
     {$IFDEF FPC}
       function Convert(Size: Byte): TGPRegister;
-      function Encode(opcode:array of Byte; other: TGPRegister; Offset:Byte=$C0): TBytes;
-      function Encode0F(opcode:array of Byte; other: TGPRegister; Offset:Byte=$C0): TBytes;
-      function EncodeHC(r8,r16,r32:array of Byte; other: TGPRegister; Offset:Byte=$C0): TBytes;
-      function EncodeMem(opcode:array of Byte; other: Pointer; Offset:Byte=$05): TBytes;
-      function EncodeMem0F(opcode:array of Byte; other: Pointer; otherSize:Int32; Offset:Byte=$05): TBytes;
+      function Encode(opcode:array of Byte; other: TGPRegister; Offset:Int16=-1; OffsetIdx:Int8=0): TBytes;
+      function EncodeMem(opcode:array of Byte; other: TMemVar; Offset:Int16=-1; OffsetIdx:Int8=0): TBytes;
     {$ENDIF}
   end;
   
-  TPtrAtGPRegister = record
-    Reg: TGPRegister;
+  TMemType = (mtRegMem=$00, mtPointer=$05, mtStack=$80); {mtStack=$40 for byte offset, but we don't support that}
+  TMemVar = record
+    MemType: TMemType;
+    Reg:  TGPRegister;
+    Size: Byte;
+    Data: TBytes;
+    
+    {$IFDEF FPC}
+      function Encode(opcode:array of Byte; other: TGPRegister; Offset:Int16=-1; OffsetIdx:Int8=0): TBytes;
+    {$ENDIF}
   end;
-
-  // FPU registers
-  TFPURegister = (
-    st0 = 0,
-    st1 = 1,
-    st2 = 2,
-    st3 = 3,
-    st4 = 4,
-    st5 = 5,
-    st6 = 6,
-    st7 = 7
-  );
   
   // immediate value
   TImmediate = record
@@ -62,17 +54,18 @@ type
     {$ENDIF}
   end;
 
-
-  //used for stack offsets
-  TStackVar = record
-    Reg: TGPRegister;
-    Offset: TImmediate;
-
-    {$IFDEF FPC}
-      function Slice(n: Int8=-1): TBytes;
-    {$ENDIF}
-  end;
-
+  
+  // FPU registers
+  TFPURegister = (
+    st0 = 0,
+    st1 = 1,
+    st2 = 2,
+    st3 = 3,
+    st4 = 4,
+    st5 = 5,
+    st6 = 6,
+    st7 = 7
+  );
 
 
 const
@@ -115,14 +108,14 @@ const
   _DH: TGPRegister = [gpDH, 0, 1];
   _BH: TGPRegister = [gpBH, 0, 1];
 
-  _AX: TGPRegister = [gpEAX, 1, 2];
-  _CX: TGPRegister = [gpECX, 1, 2];
-  _DX: TGPRegister = [gpEDX, 1, 2];
-  _BX: TGPRegister = [gpEBX, 1, 2];
-  _SP: TGPRegister = [gpESP, 1, 2];
-  _BP: TGPRegister = [gpEBP, 1, 2];
-  _SI: TGPRegister = [gpESI, 1, 2];
-  _DI: TGPRegister = [gpEDI, 1, 2];
+  _AX: TGPRegister = [gpAX, 1, 2];
+  _CX: TGPRegister = [gpCX, 1, 2];
+  _DX: TGPRegister = [gpDX, 1, 2];
+  _BX: TGPRegister = [gpBX, 1, 2];
+  _SP: TGPRegister = [gpSP, 1, 2];
+  _BP: TGPRegister = [gpBP, 1, 2];
+  _SI: TGPRegister = [gpSI, 1, 2];
+  _DI: TGPRegister = [gpDI, 1, 2];
 
   EAX: TGPRegister = [gpEAX, 1, 4];
   ECX: TGPRegister = [gpECX, 1, 4];
@@ -134,12 +127,26 @@ const
   EDI: TGPRegister = [gpEDI, 1, 4];
   
 const
-  QUAD_SIZE = 8;
-  LONG_SIZE = 4;
-  WORD_SIZE = 2;
-  BYTE_SIZE = 1;
-  PTR_SIZE  = SizeOf(NativeInt); //xxx - 32bit
+  szNATIVE = SizeOf(NativeInt); //xxx (x86 only tho)
 
+  szQUAD = 8;
+  szLONG = 4;
+  szWORD = 2;
+  szBYTE = 1;
+  
+  szSINGLE  = 4;
+  szDOUBLE  = 8;
+  szLDOUBLE = 10;
+
+  i8  = szBYTE;
+  i16 = szWORD;
+  i32 = szLONG;
+  i64 = szQUAD;
+
+  f32 = szSINGLE;
+  f64 = szDOUBLE;
+  f80 = szLDOUBLE;
+  
 
 //use with _setc
 type

@@ -53,7 +53,7 @@ begin
 
     Result := Finalize();
   finally
-    //WriteLn(Code);
+    WriteLn(Code);
     Free(False);
   end;
 end;

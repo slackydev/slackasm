@@ -5,6 +5,7 @@
   An x86 assembler
   Note that FPC compatiblity is incomplete.
 [-----------------------------------------------------------------------------}
+{$ASSERTIONS ON}
 {$IFDEF FPC}
 unit assembler;
 {$modeswitch advancedrecords}
@@ -242,7 +243,10 @@ type
     {$ENDIF}
   end;
 
-  
+const DT16: array[0..0] of Byte = {$IFDEF LAPE}[$66]{$ELSE}($66){$ENDIF};
+const NOP:  array[0..0] of Byte = {$IFDEF LAPE}[$90]{$ELSE}($90){$ENDIF};
+
+
 {$IFDEF FPC}
 procedure FreeMethod(ptr: Pointer);
 function ref(Left: TGPRegister): TPtrAtGPRegister;
@@ -391,70 +395,83 @@ type ToBytes = TBytes;
 // TGPRegister
 function TGPRegister.Convert(Size: Byte): TGPRegister; {$IFDEF LAPE}constref;{$ENDIF}
 begin
-  Assert(Size in [1,2,4],'Illegal size');
   Result := EAX;
   case Size of
-    BYTE_SIZE: Result := _AL;
-    WORD_SIZE: Result := _AX;
-    LONG_SIZE: Result := EAX;      
+    szBYTE: Result := _AL;
+    szWORD: Result := _AX;
+    szLONG: Result := EAX;
   end;
   Result.gpReg := Self.gpReg;
 end;
 
-function TGPRegister.Encode(opcode:array of Byte; other: TGPRegister; Offset:Byte=$C0): TBytes; {$IFDEF LAPE}constref;{$ENDIF}
+function TGPRegister.Encode(opcode:array of Byte; other: TGPRegister; Offset:Int16=-1; OffsetIdx:Int8=0): TBytes; {$IFDEF LAPE}constref;{$ENDIF}
 begin
-  opcode[0] += other.BaseOffset;
+  if Offset = -1 then 
+    Offset := $C0;
+  
+  opcode[OffsetIdx] += other.BaseOffset;
+  case self.Size of
+    szBYTE: Result :=        opcode + TBytes([self.gpReg*8 + other.gpReg + Offset]);
+    szWORD: Result := DT16 + opcode + TBytes([self.gpReg*8 + other.gpReg + Offset]);
+    szLONG: Result :=        opcode + TBytes([self.gpReg*8 + other.gpReg + Offset]);
+    else       Result := NOP;
+  end;
+end;
+
+function TGPRegister.EncodeMem(opcode:array of Byte; other: TMemVar; Offset:Int16=-1; OffsetIdx:Int8=0): TBytes; {$IFDEF LAPE}constref;{$ENDIF}
+begin
+  if Offset = -1 then
+    Offset := Ord(other.MemType);
+  
+  opcode[OffsetIdx] += self.BaseOffset;
+  case self.Size of
+    szBYTE: Result :=        opcode + TBytes([self.gpReg*8 + other.Reg.gpReg + Offset]);
+    szWORD: Result := DT16 + opcode + TBytes([self.gpReg*8 + other.Reg.gpReg + Offset]);
+    szLONG: Result :=        opcode + TBytes([self.gpReg*8 + other.Reg.gpReg + Offset]);
+    else       Result := NOP;
+  end;
+  if (other.MemType = mtStack) and (other.reg = ESP) then
+    Result += ToBytes([$24]);
+  
+  if Length(other.Data) > 0 then
+    Result += other.Data;
+end;
+
+
+// ---------------------------------------------------------------------------
+// TMemVar
+function TMemVar.Encode(opcode:array of Byte; other: TGPRegister; Offset:Int16=-1; OffsetIdx:Int8=0): TBytes; {$IFDEF LAPE}constref;{$ENDIF}
+begin
+  if Offset = -1 then
+    Offset := Ord(self.MemType);
+  
+  opcode[OffsetIdx] += self.Reg.BaseOffset
   case other.Size of
-    BYTE_SIZE: Result :=         opcode + TBytes([self.gpReg*8 + other.gpReg + Offset]);
-    WORD_SIZE: Result := [$66] + opcode + TBytes([self.gpReg*8 + other.gpReg + Offset]);
-    LONG_SIZE: Result :=         opcode + TBytes([self.gpReg*8 + other.gpReg + Offset]);
-    else       Result := [$90]; //NOP
+    szBYTE: Result :=        opcode + TBytes([other.gpReg*8 + self.Reg.gpReg + Offset]);
+    szWORD: Result := DT16 + opcode + TBytes([other.gpReg*8 + self.Reg.gpReg + Offset]);
+    szLONG: Result :=        opcode + TBytes([other.gpReg*8 + self.Reg.gpReg + Offset]);
+    else       Result := NOP;
   end;
+  if (self.MemType = mtStack) and (self.reg = ESP) then
+    Result += ToBytes([$24]);
+  
+  if Length(self.Data) > 0 then
+    Result += self.Data;
 end;
 
-function TGPRegister.Encode0F(opcode:array of Byte; other: TGPRegister; Offset:Byte=$C0): TBytes; {$IFDEF LAPE}constref;{$ENDIF}
+function TMemVar.FPUEncode(opcode:array of Byte; Offset:Int16=0; Data16:Boolean=False): TBytes; {$IFDEF LAPE}constref;{$ENDIF}
+var BaseOffset: Byte;
 begin
-  opcode[1] += other.BaseOffset;
-  case self.Size of
-    BYTE_SIZE: Result :=         opcode + TBytes([self.gpReg*8 + other.gpReg + Offset]);
-    WORD_SIZE: Result := [$66] + opcode + TBytes([self.gpReg*8 + other.gpReg + Offset]);
-    LONG_SIZE: Result :=         opcode + TBytes([self.gpReg*8 + other.gpReg + Offset]);
-    else       Result := [$90]; //NOP
-  end;
-end;
-
-function TGPRegister.EncodeHC(r8,r16,r32:array of Byte; other: TGPRegister; Offset:Byte=$C0): TBytes; {$IFDEF LAPE}constref;{$ENDIF}
-begin
-  case other.Size of
-    BYTE_SIZE: Result :=         r8  + TBytes([self.gpReg*8 + other.gpReg + Offset]);
-    WORD_SIZE: Result := [$66] + r16 + TBytes([self.gpReg*8 + other.gpReg + Offset]);
-    LONG_SIZE: Result :=         r32 + TBytes([self.gpReg*8 + other.gpReg + Offset]);
-    else       Result := [$90]; //NOP
-  end;
-end;
-
-function TGPRegister.EncodeMem(opcode:array of Byte; other: Pointer; Offset:Byte=$05): TBytes; {$IFDEF LAPE}constref;{$ENDIF}
-begin
-  opcode[0] += self.BaseOffset;
-  case self.Size of
-    BYTE_SIZE: Result :=         opcode + TBytes([self.gpReg*8 + Offset]);
-    WORD_SIZE: Result := [$66] + opcode + TBytes([self.gpReg*8 + Offset]);
-    LONG_SIZE: Result :=         opcode + TBytes([self.gpReg*8 + Offset]);
-    else       Result := [$90]; //NOP
-  end;
-  Result += addr_to_bytes(other);
-end;
-
-function TGPRegister.EncodeMem0F(opcode:array of Byte; other: Pointer; otherSize:Int32; Offset:Byte=$05): TBytes; {$IFDEF LAPE}constref;{$ENDIF}
-begin
-  opcode[1] += EAX.Convert(otherSize).BaseOffset;
-  case self.Size of
-    BYTE_SIZE: Result :=         opcode + TBytes([self.gpReg*8 + Offset]);
-    WORD_SIZE: Result := [$66] + opcode + TBytes([self.gpReg*8 + Offset]);
-    LONG_SIZE: Result :=         opcode + TBytes([self.gpReg*8 + Offset]);
-    else       Result := [$90]; //NOP
-  end;
-  Result += addr_to_bytes(other);
+  BaseOffset := Ord(self.MemType);
+  if Data16 then Result := DT16;
+  
+  Result += opcode + TBytes([self.Reg.gpReg + Offset + BaseOffset]);
+  
+  if (self.MemType = mtStack) and (self.reg = ESP) then
+    Result += ToBytes([$24]);
+  
+  if Length(self.Data) > 0 then
+    Result += self.Data;
 end;
 
 
@@ -479,27 +496,13 @@ begin
   if Length(r16) > 0 then r16[High(r16)] += other.gpReg;
   if Length(r32) > 0 then r32[High(r32)] += other.gpReg;
   case Other.size of
-    BYTE_SIZE: Result :=         r8  + self.Slice(Other.size);
-    WORD_SIZE: Result := [$66] + r16 + self.Slice(Other.size);
-    LONG_SIZE: Result :=         r32 + self.Slice(Other.size);
-    else       Result := [$90]; //NOP
+    szBYTE: Result :=        r8  + self.Slice(Other.size);
+    szWORD: Result := DT16 + r16 + self.Slice(Other.size);
+    szLONG: Result :=        r32 + self.Slice(Other.size);
+    else       Result := NOP;
   end;
 end;
 
-
-// ---------------------------------------------------------------------------
-// TStackVar
-function TStackVar.Encode(opcode:array of Byte; other: TGPRegister; Offset:Byte=$40): TBytes; {$IFDEF LAPE}constref;{$ENDIF}
-begin
-  opcode[0] += other.BaseOffset;
-  case other.Size of
-    BYTE_SIZE: Result :=         opcode + TBytes([other.gpReg*8 + self.reg.gpReg + Offset]);
-    WORD_SIZE: Result := [$66] + opcode + TBytes([other.gpReg*8 + self.reg.gpReg + Offset]);
-    LONG_SIZE: Result :=         opcode + TBytes([other.gpReg*8 + self.reg.gpReg + Offset]);
-    else       Result := [$90]; //NOP
-  end;
-  Result += self.Offset.value;
-end;
 
 
 // ----------------------------------------------------------------------------

@@ -23,79 +23,127 @@ end;
 
 function addr_to_bytes(x: Pointer): TBytes;
 begin
-  SetLength(Result, PTR_SIZE);
-  MemMove(x, Result[0], PTR_SIZE);
+  SetLength(Result, szNATIVE);
+  MemMove(x, Result[0], szNATIVE);
 end;
 
 function long_to_bytes(x: Int32): TBytes;
 begin
-  SetLength(Result, LONG_SIZE);
-  MemMove(x, Result[0], LONG_SIZE);
+  SetLength(Result, szLONG);
+  MemMove(x, Result[0], szLONG);
 end;
 
 function word_to_bytes(x: Int16): TBytes;
 begin
-  SetLength(Result, WORD_SIZE);
-  MemMove(x, Result[0], WORD_SIZE);
-end;
-
-
-//Used to do this: mov (%eax), %ecx
-//  A) _mov(ref(eax), eax);
-function ref(Left: TGPRegister): TPtrAtGPRegister;
-begin
-  Result.Reg := Left;
+  SetLength(Result, szWORD);
+  MemMove(x, Result[0], szWORD);
 end;
 
 
 // immediate constructions
-function imm(v: Int32): TImmediate;
+function imm(v: Int32; Size:Byte=szLONG): TImmediate;
 begin
-  Result.Size := LONG_SIZE;
+  Result.Size := Size;
   SetLength(Result.Value, Result.Size);
   MemMove(v, Result.Value[0], Result.Size);
 end;
 
-function imm8(v: Int8): TImmediate;
+function imm8(v: Int32): TImmediate;
 begin
-  Result.Size := BYTE_SIZE;
-  SetLength(Result.Value, LONG_SIZE);
+  Result.Size := szBYTE;
+  SetLength(Result.Value, szLONG);
   MemMove(v, Result.Value[0], Result.Size);
 end;
 
-function imm16(v: Int16): TImmediate;
+function imm16(v: Int32): TImmediate;
 begin
-  Result.Size := WORD_SIZE;
-  SetLength(Result.Value, LONG_SIZE);
+  Result.Size := szWORD;
+  SetLength(Result.Value, szLONG);
   MemMove(v, Result.Value[0], Result.Size);
 end;
 
 function imm32(v: Int32): TImmediate;
 begin
-  Result.Size := LONG_SIZE;
-  SetLength(Result.Value, LONG_SIZE);
+  Result.Size := szLONG;
+  SetLength(Result.Value, szLONG);
   MemMove(v, Result.Value[0], Result.Size);
 end;
 
 
+//Used to do this: mov (%eax), %ecx
+//  A) _mov(ref(eax), eax);
+function ref(Reg: TGPRegister): TMemVar;
+begin
+  Result.MemType := mtRegMem;
+  Result.Reg  := Reg;
+  Result.Size := Reg.Size;
+  Result.Data := {$IFDEF LAPE}[]{$ELSE}nil{$ENDIF};
+end;
+
+
 // stack variable construction
-operator + (reg:TGPRegister; offset:Int32): TStackVar;
+operator + (reg:TGPRegister; offset:Int32): TMemVar;
 begin
-  Result.reg    := reg;
-  Result.offset := imm(offset);
+  Result.MemType := mtStack;
+  Result.Reg  := Reg;
+  Result.Size := szLONG;
+  Result.Data := long_to_bytes(offset);
 end;
 
-operator - (reg:TGPRegister; offset:Int32): TStackVar;
+operator - (reg:TGPRegister; offset:Int32): TMemVar;
 begin
-  Result.reg    := reg;
-  Result.offset := imm(-offset);
+  Result.MemType := mtStack;
+  Result.Reg  := Reg;
+  Result.Size := szLONG;
+  Result.Data := long_to_bytes(-offset);
 end;
 
+function mem(var x; Size:Byte=szLONG): TMemVar;
+begin
+  Result.MemType := mtPointer;
+  Result.Reg  := EAX.Convert(Size);
+  Result.Size := Size;
+  Result.Data := addr_to_bytes(@x);
+end;
 
+operator is (memvar:TMemVar; Size:Byte): TMemVar;
+begin
+  Result := memvar;
+  Result.Reg := Result.Reg.Convert(Size);
+  Result.Size := Size;
+end;
 
 
 // ---------------------------------------------------------------------------
-// lape helpers bellow
+// FPC helpers
+{$IFDEF FPC}
+operator + (Left:TBytes; Right:TBytes): TMemVar;
+var i:Int32;
+begin
+  SetLength(Result, Length(Left) + Length(Right));
+  MemMove(Left[0],  Result[0],            Length(Left));
+  MemMove(Right[0], Result[Length(Left)], Length(Right));
+end;
+
+operator + (Left:array of Byte; Right:TBytes): TMemVar;
+var i:Int32;
+begin
+  SetLength(Result, Length(Left) + Length(Right));
+  MemMove(Left[0],  Result[0],            Length(Left));
+  MemMove(Right[0], Result[Length(Left)], Length(Right));
+end;
+
+operator + (Left:TBytes; Right:array of Byte): TMemVar;
+var i:Int32;
+begin
+  SetLength(Result, Length(Left) + Length(Right));
+  MemMove(Left[0],  Result[0],            Length(Left));
+  MemMove(Right[0], Result[Length(Left)], Length(Right));
+end;
+{$ENDIF}
+
+// ---------------------------------------------------------------------------
+// lape helpers
 
 {$IFDEF LAPE}
   function ToString(x: TBytes): string; override;

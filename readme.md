@@ -1,8 +1,8 @@
-A small assembler in Lape, requires Simba 1.2+ or just the lape interpreter itself.
-Operations follow the same order as found in AT&T syntax, opcode names are a mixture of Intel and AT&T.
+A simple assembler in Lape, requires Simba 1.2+ or just the latest lape interpreter (might need tweaks).
+Operations follow the same order as found in AT&T syntax, opcode names are mainly similar to Intel's.
 
 
-Example:
+Basic example:
 ```pascal
 {$I slackasm/assembler.pas}
 
@@ -13,24 +13,27 @@ var
   y: Int32 = 100;
   z: Int32;
 begin
-  // result -> (x + y) * x
+  // compute: (x + y) * x
   with assembler := TSlackASM.Create() do
   try
-    code += _mov (@x,   EAX);        // EAX := x
-    code += _add (@y,   EAX);        // EAX := EAX += y
-    code += _imul(@x,   EAX);        // EAX := EAX *= x;
-    code += _mov (EAX,  @z);         // z   := EAX;
+    code += _mov (mem(x), eax);        // eax := x
+    code += _add (mem(y), eax);        // eax := eax += y
+    code += _imul(mem(x), eax);        // eax := eax *= x;
+    code += _mov (eax, mem(z));        // z   := eax;
     code += _ret;
     callable := Finalize();   // "Build" the method
   finally
     Free(False);
   end;
 
-  //execute the code:
+  // execute the code:
   callable();
   WriteLn([x, y, z]); //prints 2, 100, 204
 
-  //free the code
+  // free the code
   FreeMethod(@callable);
 end.
 ```
+
+
+For more indepth examples, check out the Examples folder.

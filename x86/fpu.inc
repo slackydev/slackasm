@@ -132,7 +132,6 @@ begin
   else if (Ord(dst) = 0) then Result := ToBytes([fpu_opcode[1], ADD_OFFSET[1]+ord(src)])
 end;
 
-//FADD
 function TSlackASM._fadd(mem: TMemVar): TBytes; overload;
 begin
   case mem.Size of 
@@ -141,7 +140,6 @@ begin
   end;
 end;
 
-// FIADD - Integer Addition
 function TSlackASM._fiadd(mem: TMemVar): TBytes; 
 begin
   case mem.Size of 
@@ -166,7 +164,6 @@ begin
   else if (Ord(dst) = 0) then Result := ToBytes([fpu_opcode[1], SUB_OFFSET[1]+ord(src)])
 end;
 
-//FADD
 function TSlackASM._fsub(mem: TMemVar): TBytes; overload;
 begin
   case mem.Size of 
@@ -175,7 +172,6 @@ begin
   end;
 end;
 
-// FIADD - Integer Addition
 function TSlackASM._fisub(mem: TMemVar): TBytes; 
 begin
   case mem.Size of 
@@ -201,7 +197,6 @@ begin
   else if (Ord(dst) = 0) then Result := ToBytes([fpu_opcode[1], SUBR_OFFSET[1]+ord(src)])
 end;
 
-//FADD
 function TSlackASM._fsubr(mem: TMemVar): TBytes; overload;
 begin
   case mem.Size of 
@@ -210,7 +205,6 @@ begin
   end;
 end;
 
-// FIADD - Integer Addition
 function TSlackASM._fisubr(mem: TMemVar): TBytes; 
 begin
   case mem.Size of 
@@ -236,7 +230,6 @@ begin
   else if (Ord(dst) = 0) then Result := ToBytes([fpu_opcode[1], MUL_OFFSET[1]+ord(src)])
 end;
 
-//FADD
 function TSlackASM._fmul(mem: TMemVar): TBytes; overload;
 begin
   case mem.Size of 
@@ -245,7 +238,6 @@ begin
   end;
 end;
 
-// FIADD - Integer Addition
 function TSlackASM._fimul(mem: TMemVar): TBytes; 
 begin
   case mem.Size of 
@@ -271,7 +263,6 @@ begin
   else if (Ord(dst) = 0) then Result := ToBytes([fpu_opcode[1], DIV_OFFSET[1]+ord(src)])
 end;
 
-//FADD
 function TSlackASM._fdiv(mem: TMemVar): TBytes; overload;
 begin
   case mem.Size of 
@@ -280,7 +271,6 @@ begin
   end;
 end;
 
-// FIADD - Integer Addition
 function TSlackASM._fidiv(mem: TMemVar): TBytes; 
 begin
   case mem.Size of 
@@ -306,7 +296,6 @@ begin
   else if (Ord(dst) = 0) then Result := ToBytes([fpu_opcode[1], DIVR_OFFSET[1]+ord(src)])
 end;
 
-//FADD
 function TSlackASM._fdivr(mem: TMemVar): TBytes; overload;
 begin
   case mem.Size of 
@@ -315,7 +304,6 @@ begin
   end;
 end;
 
-// FIADD - Integer Addition
 function TSlackASM._fidivr(mem: TMemVar): TBytes; 
 begin
   case mem.Size of 

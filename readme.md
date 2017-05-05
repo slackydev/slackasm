@@ -7,27 +7,27 @@ Basic example:
 {$I slackasm/assembler.pas}
 
 var
-  assembler: TSlackASM;
-  callable: external procedure();
+  Assembler: TSlackASM;
+  Callable: external procedure();
   x: Int32 = 2;
   y: Int32 = 100;
   z: Int32;
 begin
   // compute: (x + y) * x
-  with assembler := TSlackASM.Create() do
+  with Assembler := TSlackASM.Create() do
   try
-    code += _mov (mem(x), eax);        // eax := x
-    code += _add (mem(y), eax);        // eax := eax += y
-    code += _imul(mem(x), eax);        // eax := eax *= x;
-    code += _mov (eax, mem(z));        // z   := eax;
-    code += _ret;
-    callable := Finalize();   // "Build" the method
+    Code += _mov (mem(x), eax);        // eax := x
+    Code += _add (mem(y), eax);        // eax := eax += y
+    Code += _imul(mem(x), eax);        // eax := eax *= x;
+    Code += _mov (eax, mem(z));        // z   := eax;
+    Code += _ret;
+    Callable := Finalize();   // "Build" the method
   finally
-    Free(False);
+    Free();
   end;
 
-  // execute the code:
-  callable();
+  // execute the code
+  Callable();
   WriteLn([x, y, z]); //prints 2, 100, 204
 
   // free the code

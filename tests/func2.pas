@@ -31,30 +31,24 @@ end;
 
 
 function LapeMulFunc(DTYPE:Byte=szLONG): Pointer;
-const
-  NUM_ARGS = 2;
-var
-  assembler: TSlackASM;
+const NUM_ARGS = 2;
+var   assembler: TSlackASM;
 begin
-  assembler := TSlackASM.Create(256);
-  LapeFuncPrologue(assembler, NUM_ARGS);
-
-  with assembler do
-  begin
+  with assembler := TSlackASM.Create() do
+  try
+    LapeFuncPrologue(assembler, NUM_ARGS);
     code += _mov(ebp-4, edx);
     code += _movzx(ref(edx) is DTYPE, eax);
     code += _mov(ebp-8, edx);
     code += _movzx(ref(edx) is DTYPE, ecx);
     code += _imul(ecx, eax);
-
     code += _mov(ebp+12, edx);
     code += _mov(eax, ref(edx));
+    LapeFuncEpilogue(assembler, NUM_ARGS);
+    Result := Finalize();
+  finally
+    Free()
   end;
-
-  LapeFuncEpilogue(assembler, NUM_ARGS);
-  Result := assembler.Finalize();
-  //WriteLn assembler.Code;
-  assembler.Free(False);
 end;
 
 

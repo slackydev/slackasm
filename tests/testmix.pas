@@ -6,22 +6,26 @@ var
   assembler: TSlackASM;
   Method: external procedure();
 var
-  x,y: Int32;
-  b: Boolean;
+  z,x,y: Int32;
 begin
   x := 100;
   y := 10;
-  with assembler := TSlackASM.Create(2 shl 11) do
+  with assembler := TSlackASM.Create() do
   try
-    code += _imul(ecx, eax);
+    code += _mov(mem(x), ebx);
+    code += _imul(imm(10), _ax);
+    code += _imul(imm(10), _cx);
+    code += _imul(imm(10), _dx);
+    code += _imul(imm(10), _bx);
+    code += _mov(ebx, mem(z));
     code += _ret;
     Method := Finalize();
   finally
     WriteLn(Code);
-    Free(False);
+    Free();
   end;
 
-  //Method();
-  WriteLn([x, y, b]);
+  Method();
+  WriteLn([x, y, z]);
   FreeMethod(@method);
 end.

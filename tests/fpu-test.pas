@@ -36,21 +36,19 @@ const
 var
   assembler: TSlackASM;
 begin
-  assembler := TSlackASM.Create(256);
-  LapeFuncPrologue(assembler, NUM_ARGS);
-
-  with assembler do
-  begin
+  with assembler := TSlackASM.Create() do
+  try
+    LapeFuncPrologue(assembler, NUM_ARGS);
     code += _mov(ebp-4, ebx) + _fld(ref(ebx) is sz1);
     code += _mov(ebp-8, ebx) + _fld(ref(ebx) is sz2);
     code += _fmulp;
     code += _mov(ebp+12, ebx);
     code += _fstp(ref(ebx) is f64);
+    LapeFuncEpilogue(assembler, NUM_ARGS);
+    Result := Finalize();
+  finally
+    Free();
   end;
-
-  LapeFuncEpilogue(assembler, NUM_ARGS);
-  Result := assembler.Finalize();
-  assembler.Free(False);
 end;
 
 

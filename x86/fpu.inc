@@ -94,6 +94,18 @@ end;
 
 
 // ===========================================================================
+// FISTTP - Store Integer To Memory (Truncated) And Pop
+function TSlackASM._fisttp(dst: TMemVar): TBytes;
+begin
+  case dst.Size of
+    i16: Result := dst.FPUEncode([$DF], $0D, True);
+    i32: Result := dst.FPUEncode([$DB], $0D);
+    i64: Result := dst.FPUEncode([$DD], $0D);
+  end;
+end;
+
+
+// ===========================================================================
 // FFREE - Free the register operand (Marks as Unused)
 function TSlackASM._ffree(reg: TFPURegister): TBytes; 
 begin

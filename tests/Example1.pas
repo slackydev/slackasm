@@ -1,4 +1,6 @@
-program test1;
+program Example1;
+// This wont be THAT much faster than lape, 10-15x or so, because idiv takes
+// many cpu cycles to compute, making lapes overhead less of an overall cost.
 {$I slackasm/assembler.pas}
 {$X+}
 
@@ -25,7 +27,7 @@ begin
 
 
   //---- Now let's do that with assembly (using a do..while loop)
-  with assembler := TSlackASM.Create(2 shl 11) do
+  with assembler := TSlackASM.Create() do
   try
     code += _mov(imm(0), ebx);            // move 0 to %ebx (it's kept in %ebx, as the loop counter)
     var lbl1 := Location;                 // make a label so we can jump here
@@ -43,10 +45,10 @@ begin
     code += _mov (ebx, mem(i));           // move %ebx to `i`
     code += _ret;                         // return
 
-    Method := Finalize();                 // build a function from the assembler
+    Method := Finalize();                 // create a function for us to call
   finally
   //WriteLn(Code);                        // (print the machinecode we produced)
-    Free(False);                          // free it, but not the method we made
+    Free();                               // resets it
   end;
 
 

@@ -106,6 +106,14 @@ begin
   Result.Data := addr_to_bytes(@x);
 end;
 
+function ptr(x: Pointer; Size:Byte=szLONG): TMemVar;
+begin
+  Result.MemType := mtPointer;
+  Result.Reg  := EAX.Convert(Size);
+  Result.Size := Size;
+  Result.Data := addr_to_bytes(x);
+end;
+
 operator is (memvar:TMemVar; Size:Byte): TMemVar;
 begin
   Result := memvar;

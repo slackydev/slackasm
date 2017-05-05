@@ -23,7 +23,7 @@ function MulFunc(): Pointer;
 var
   assembler: TSlackASM;
 begin
-  with assembler := TSlackASM.Create(2 shl 11) do
+  with assembler := TSlackASM.Create() do
   try
     // prologue
     code += _push(ebp);
@@ -54,7 +54,7 @@ begin
     Result := Finalize();
   finally
     WriteLn(Code);
-    Free(False);
+    Free();
   end;
 end;
 

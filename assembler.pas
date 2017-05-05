@@ -31,8 +31,8 @@ uses  SysUtils, Windows;
 
 type
   TSlackASM = {$IFDEF FPC}class{$ENDIF}{$IFDEF LAPE}record{$ENDIF}
-    ExecSize: SizeInt;
-    Exec: Pointer;
+    //ExecSize: SizeInt;
+    //Exec: Pointer;
     Code: TNativeCode;
     
     {$IFDEF FPC}
@@ -246,6 +246,8 @@ type
 const DT16: array[0..0] of Byte = {$IFDEF LAPE}[$66]{$ELSE}($66){$ENDIF};
 const NOP:  array[0..0] of Byte = {$IFDEF LAPE}[$90]{$ELSE}($90){$ENDIF};
 
+const FIRST_IDX   =  0;
+const SECOND_IDX  =  1;
 
 {$IFDEF FPC}
 procedure FreeMethod(ptr: Pointer);
@@ -271,36 +273,31 @@ end;
 // ============================================================================
 // Executable memory class
 {$IFDEF FPC}
-constructor TSlackASM.Create(PAGE_SIZE: Int32=4096);
+constructor TSlackASM.Create();
 begin
-  ExecSize := PAGE_SIZE;
-  Exec := VirtualAlloc(nil, PAGE_SIZE, $00002000 or $00001000, $40);
+  //nothing atm
 end;
 {$ENDIF}
 {$IFDEF LAPE}
-function TSlackASM.Create(PAGE_SIZE: Int32=4096): TSlackASM; static;
+function TSlackASM.Create(): TSlackASM; static;
 begin
-  Result.ExecSize := PAGE_SIZE;
-  Result.Exec := VirtualAlloc(nil, PAGE_SIZE, $00002000 or $00001000, $40);
+  Result := [];
 end;
 {$ENDIF}
 
 
-procedure TSlackASM.Free(FreeExec: Boolean=True);
+procedure TSlackASM.Free();
 begin
-  if FreeExec then VirtualFree(Self.Exec, 0, $8000);
   SetLength(Self.Code, 0);
-  {$IFDEF FPC}
-  Self.Destroy;
-  {$ENDIF}
+  {$IFDEF FPC}Self.Destroy;{$ENDIF}
 end;
+
 
 function TSlackASM.Size: SizeInt;
 begin
   Result := Length(Self.Code);
 end;
 
-// mainly used to create labels
 function TSlackASM.Location: SizeInt;
 var i:Int32;
 begin
@@ -360,24 +357,24 @@ end;
 
 // ----------------------------------------------------------------------------
 // moves the code to executable mem, returns it
-function TSlackASM.Finalize(Reset: Boolean=False): TExternalMethod;
-var i,j,c:Int32;
+function TSlackASM.Finalize(): TExternalMethod;
+var
+  i,j,c, size:Int32;
+  exec: PInt8;
 begin
+  size := Trunc(2 ** (Floor(Logn(2, Self.Location+1)) + 1));     // should round to nearest page size..
+  exec := VirtualAlloc(nil, size, $00002000 or $00001000, $40);  // but I don't think it's important for now
+                                                                 // * GetSystemInfo
   c := 0;
   for i:=0 to High(code) do
     for j:=0 to High(code[i]) do
     begin
-      (PInt8(exec)+c)^ := code[i][j];
+      (exec+c)^ := code[i][j];
       Inc(c);
     end;
-  Result := TExternalMethod(Self.Exec);
-  
-  if Reset then
-  begin
-    SetLength(Self.code, 0);
-    Self.Exec := VirtualAlloc(nil, Self.ExecSize, $00002000 or $00001000, $40);
-  end;
+  Result := TExternalMethod(exec);
 end;
+
 
 {$IFDEF FPC}
 function ToBytes(x: array of Byte): TBytes; 
@@ -474,6 +471,18 @@ begin
     Result += self.Data;
 end;
 
+function TMemVar.Offset(n:Int32): TMemVar; {$IFDEF LAPE}constref;{$ENDIF}
+var tmp:Int32;
+begin
+  Assert(self.MemType <> mtRegMem, 'Illegal operand');
+  Result := Self;
+  Result.Data := Copy(Self.Data);
+  MemMove(Result.Data[0], tmp, i32);
+  tmp += n;
+  MemMove(tmp, Result.Data[0], i32);
+end;
+
+
 
 // ---------------------------------------------------------------------------
 // TImmediate
@@ -481,8 +490,8 @@ function TImmediate.Slice(n: Int8=-1): TBytes; {$IFDEF LAPE}constref;{$ENDIF}
 begin
   if (n = -1) then
   begin
-    SetLength(Result, Self.size);
-    MemMove(self.value[0], Result[0], self.size);
+    SetLength(Result, Self.Size);
+    MemMove(self.value[0], Result[0], self.Size);
   end else
   begin
     SetLength(Result, n);
@@ -490,16 +499,39 @@ begin
   end;
 end;
 
+function TImmediate.Encode(opcode:array of Byte; Other: TGPRegister; OffsetIdx:Byte=0): TBytes; {$IFDEF LAPE}constref;{$ENDIF}
+begin
+  opcode[OffsetIdx] += other.BaseOffset;
+  case Other.Size of
+    szBYTE: Result :=        opcode + self.Slice(Other.Size);
+    szWORD: Result := DT16 + opcode + self.Slice(Other.Size);
+    szLONG: Result :=        opcode + self.Slice(Other.Size);
+    else    Result := NOP;
+  end;
+end;
+
+function TImmediate.EncodeEx(opcode:array of Byte; Other1,Other2: TGPRegister; OffsetIdx:Byte=0; Offset:Int16=0): TBytes; {$IFDEF LAPE}constref;{$ENDIF}
+begin
+  opcode[OffsetIdx] += other1.BaseOffset;
+  case Other1.Size of
+    szBYTE: Result :=        opcode + [other1.gpReg*8 + other2.gpReg + Offset] + self.Slice(Other1.Size);
+    szWORD: Result := DT16 + opcode + [other1.gpReg*8 + other2.gpReg + Offset] + self.Slice(Other1.Size);
+    szLONG: Result :=        opcode + [other1.gpReg*8 + other2.gpReg + Offset] + self.Slice(Other1.Size);
+    else    Result := NOP;
+  end;
+end;
+
+
 function TImmediate.EncodeHC(r8,r16,r32:array of Byte; Other: TGPRegister): TBytes; {$IFDEF LAPE}constref;{$ENDIF}
 begin
   if Length(r8)  > 0 then r8 [High(r8) ] += other.gpReg;
   if Length(r16) > 0 then r16[High(r16)] += other.gpReg;
   if Length(r32) > 0 then r32[High(r32)] += other.gpReg;
-  case Other.size of
-    szBYTE: Result :=        r8  + self.Slice(Other.size);
-    szWORD: Result := DT16 + r16 + self.Slice(Other.size);
-    szLONG: Result :=        r32 + self.Slice(Other.size);
-    else       Result := NOP;
+  case Other.Size of
+    szBYTE: Result :=        r8  + self.Slice(Other.Size);
+    szWORD: Result := DT16 + r16 + self.Slice(Other.Size);
+    szLONG: Result :=        r32 + self.Slice(Other.Size);
+    else    Result := NOP;
   end;
 end;
 

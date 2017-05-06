@@ -12,11 +12,11 @@ begin
   y := 10;
   with assembler := TSlackASM.Create() do
   try
-    code += _mov(mem(x), ebx);
-    code += _imul(imm(10), _ax);
-    code += _imul(imm(10), _cx);
-    code += _imul(imm(10), _dx);
-    code += _imul(imm(10), _bx);
+    code += _mov(mem(x),  ebx);
+    code += _add(imm(10), eax);
+    code += _add(imm(10), ecx);
+    code += _add(imm(10), edx);
+    code += _add(imm(10), ebx);
     code += _mov(ebx, mem(z));
     code += _ret;
     Method := Finalize();

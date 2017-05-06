@@ -9,8 +9,8 @@ type
 
   TBytes = array of Byte;
   TNativeCode = array of TBytes;
-
-  TExternalMethod = {$IFNDEF CodeInSight}{$IFNDEF FPC}external{$ENDIF}{$ENDIF} procedure();
+  
+  TExternalMethod = {$IFNDEF CodeInSight}{$IFDEF LAPE}external{$ENDIF}{$ENDIF} procedure();
   PInt64 = ^Int64;
   PInt32 = ^Int32;
   PInt16 = ^Int16;
@@ -25,9 +25,8 @@ type
   TGPRegister = record
     gpReg, BaseOffset, Size: Byte;
     {$IFDEF FPC}
-      function Convert(Size: Byte): TGPRegister;
+      function Convert(NewSize: Byte): TGPRegister;
       function Encode(opcode:array of Byte; other: TGPRegister; Offset:Int16=-1; OffsetIdx:Int8=0): TBytes;
-      function EncodeMem(opcode:array of Byte; other: TMemVar; Offset:Int16=-1; OffsetIdx:Int8=0): TBytes;
     {$ENDIF}
   end;
   
@@ -38,8 +37,11 @@ type
     Size: Byte;
     Data: TBytes;
     
-    {$IFDEF FPC}
+    {$IFNDEF LAPE}
       function Encode(opcode:array of Byte; other: TGPRegister; Offset:Int16=-1; OffsetIdx:Int8=0): TBytes;
+      function EncodeR(opcode:array of Byte; other: TGPRegister; Offset:Int16=-1; OffsetIdx:Int8=0): TBytes;
+      function FPUEncode(opcode:array of Byte; Offset:Int16=0; Data16:Boolean=False): TBytes;
+      function Offset(n:Int32): TMemVar;
     {$ENDIF}
   end;
   
@@ -48,8 +50,10 @@ type
     Value:TBytes;
     Size: Byte;
     
-    {$IFDEF FPC}
+    {$IFNDEF LAPE}
       function Slice(n: Int8=-1): TBytes;
+      function Encode(opcode:array of Byte; Other: TGPRegister; Offset:Int16=-1; OffsetIdx:Byte=0): TBytes;
+      function EncodeEx(opcode:array of Byte; Other1,Other2: TGPRegister; Offset:Int16=0; OffsetIdx:Byte=0): TBytes;
       function EncodeHC(r8,r16,r32:array of Byte; Other: TGPRegister): TBytes;
     {$ENDIF}
   end;
@@ -99,32 +103,32 @@ const
 
   
 const
-  _AL: TGPRegister = [gpAL, 0, 1];
-  _CL: TGPRegister = [gpCL, 0, 1];
-  _DL: TGPRegister = [gpDL, 0, 1];
-  _BL: TGPRegister = [gpBL, 0, 1];
-  _AH: TGPRegister = [gpAH, 0, 1];
-  _CH: TGPRegister = [gpCH, 0, 1];
-  _DH: TGPRegister = [gpDH, 0, 1];
-  _BH: TGPRegister = [gpBH, 0, 1];
+  _AL: TGPRegister = {$IFDEF LAPE}[gpAL, 0, 1];{$ELSE}(gpReg:gpAL; BaseOffset:0; Size:1);{$ENDIF}
+  _CL: TGPRegister = {$IFDEF LAPE}[gpCL, 0, 1];{$ELSE}(gpReg:gpCL; BaseOffset:0; Size:1);{$ENDIF}
+  _DL: TGPRegister = {$IFDEF LAPE}[gpDL, 0, 1];{$ELSE}(gpReg:gpDL; BaseOffset:0; Size:1);{$ENDIF}
+  _BL: TGPRegister = {$IFDEF LAPE}[gpBL, 0, 1];{$ELSE}(gpReg:gpBL; BaseOffset:0; Size:1);{$ENDIF}
+  _AH: TGPRegister = {$IFDEF LAPE}[gpAH, 0, 1];{$ELSE}(gpReg:gpAH; BaseOffset:0; Size:1);{$ENDIF}
+  _CH: TGPRegister = {$IFDEF LAPE}[gpCH, 0, 1];{$ELSE}(gpReg:gpCH; BaseOffset:0; Size:1);{$ENDIF}
+  _DH: TGPRegister = {$IFDEF LAPE}[gpDH, 0, 1];{$ELSE}(gpReg:gpDH; BaseOffset:0; Size:1);{$ENDIF}
+  _BH: TGPRegister = {$IFDEF LAPE}[gpBH, 0, 1];{$ELSE}(gpReg:gpBH; BaseOffset:0; Size:1);{$ENDIF}
 
-  _AX: TGPRegister = [gpAX, 1, 2];
-  _CX: TGPRegister = [gpCX, 1, 2];
-  _DX: TGPRegister = [gpDX, 1, 2];
-  _BX: TGPRegister = [gpBX, 1, 2];
-  _SP: TGPRegister = [gpSP, 1, 2];
-  _BP: TGPRegister = [gpBP, 1, 2];
-  _SI: TGPRegister = [gpSI, 1, 2];
-  _DI: TGPRegister = [gpDI, 1, 2];
+  _AX: TGPRegister = {$IFDEF LAPE}[gpAX, 1, 2];{$ELSE}(gpReg:gpAX; BaseOffset:1; Size:2);{$ENDIF}
+  _CX: TGPRegister = {$IFDEF LAPE}[gpCX, 1, 2];{$ELSE}(gpReg:gpCX; BaseOffset:1; Size:2);{$ENDIF}
+  _DX: TGPRegister = {$IFDEF LAPE}[gpDX, 1, 2];{$ELSE}(gpReg:gpDX; BaseOffset:1; Size:2);{$ENDIF}
+  _BX: TGPRegister = {$IFDEF LAPE}[gpBX, 1, 2];{$ELSE}(gpReg:gpBX; BaseOffset:1; Size:2);{$ENDIF}
+  _SP: TGPRegister = {$IFDEF LAPE}[gpSP, 1, 2];{$ELSE}(gpReg:gpSP; BaseOffset:1; Size:2);{$ENDIF}
+  _BP: TGPRegister = {$IFDEF LAPE}[gpBP, 1, 2];{$ELSE}(gpReg:gpBP; BaseOffset:1; Size:2);{$ENDIF}
+  _SI: TGPRegister = {$IFDEF LAPE}[gpSI, 1, 2];{$ELSE}(gpReg:gpSI; BaseOffset:1; Size:2);{$ENDIF}
+  _DI: TGPRegister = {$IFDEF LAPE}[gpDI, 1, 2];{$ELSE}(gpReg:gpDI; BaseOffset:1; Size:2);{$ENDIF}
 
-  EAX: TGPRegister = [gpEAX, 1, 4];
-  ECX: TGPRegister = [gpECX, 1, 4];
-  EDX: TGPRegister = [gpEDX, 1, 4];
-  EBX: TGPRegister = [gpEBX, 1, 4];
-  ESP: TGPRegister = [gpESP, 1, 4];
-  EBP: TGPRegister = [gpEBP, 1, 4];
-  ESI: TGPRegister = [gpESI, 1, 4];
-  EDI: TGPRegister = [gpEDI, 1, 4];
+  EAX: TGPRegister = {$IFDEF LAPE}[gpEAX, 1, 4];{$ELSE}(gpReg:gpEAX; BaseOffset:1; Size:4);{$ENDIF}
+  ECX: TGPRegister = {$IFDEF LAPE}[gpECX, 1, 4];{$ELSE}(gpReg:gpECX; BaseOffset:1; Size:4);{$ENDIF}
+  EDX: TGPRegister = {$IFDEF LAPE}[gpEDX, 1, 4];{$ELSE}(gpReg:gpEDX; BaseOffset:1; Size:4);{$ENDIF}
+  EBX: TGPRegister = {$IFDEF LAPE}[gpEBX, 1, 4];{$ELSE}(gpReg:gpEBX; BaseOffset:1; Size:4);{$ENDIF}
+  ESP: TGPRegister = {$IFDEF LAPE}[gpESP, 1, 4];{$ELSE}(gpReg:gpESP; BaseOffset:1; Size:4);{$ENDIF}
+  EBP: TGPRegister = {$IFDEF LAPE}[gpEBP, 1, 4];{$ELSE}(gpReg:gpEBP; BaseOffset:1; Size:4);{$ENDIF}
+  ESI: TGPRegister = {$IFDEF LAPE}[gpESI, 1, 4];{$ELSE}(gpReg:gpESI; BaseOffset:1; Size:4);{$ENDIF}
+  EDI: TGPRegister = {$IFDEF LAPE}[gpEDI, 1, 4];{$ELSE}(gpReg:gpEDI; BaseOffset:1; Size:4);{$ENDIF}
   
 const
   szNATIVE = SizeOf(NativeInt); //xxx (x86 only tho)

@@ -47,6 +47,7 @@ begin
     LapeFuncEpilogue(assembler, NUM_ARGS);
     Result := Finalize();
   finally
+    WriteLn(code);
     Free()
   end;
 end;

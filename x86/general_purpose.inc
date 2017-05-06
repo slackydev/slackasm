@@ -27,7 +27,7 @@ end;
 function TSlackASM._push(x: TImmediate): TBytes; overload;
 begin
   Assert(x.Size = 4, 'Illegal operand size BYTE');
-  Result := [68] + x.slice(4);
+  Result := ToBytes([68]) + x.slice(4);
 end;
 
 
@@ -68,7 +68,7 @@ end;
 
 function TSlackASM._mov(x: TGPRegister; y: TMemVar): TBytes; overload; 
 begin
-  Result := x.EncodeMem([$88], y);
+  Result := y.EncodeR([$88], x);
 end;
 
 function TSlackASM._mov(x: TImmediate; y: TGPRegister): TBytes; overload; 
@@ -156,7 +156,7 @@ end;
 // CDQ - Convert Doubleword to Quadword (EDX:EAX = sign-extend of EAX)
 function TSlackASM._cdq(): TBytes;
 begin
-  Result := [$99];
+  Result := ToBytes([$99]);
 end;
 
 function TSlackASM._cltq(): TBytes;
@@ -175,7 +175,7 @@ end;
 
 function TSlackASM._test(x: TGPRegister; y: TMemVar): TBytes; overload; 
 begin
-  Result := x.EncodeMem([$84], y);
+  Result := y.EncodeR([$84], x);
 end;
 
 function TSlackASM._test(x: TMemVar; y: TGPRegister): TBytes; overload; 
@@ -185,7 +185,7 @@ end;
 
 function TSlackASM._test(x: TImmediate; y: TGPRegister): TBytes; overload; 
 begin
-  Result := x.Encode([$F7, $C0], y, 1);
+  Result := x.Encode([$F7], y, $C0);
 end;
 
 
@@ -199,7 +199,7 @@ end;
 
 function TSlackASM._cmp(x: TGPRegister; y: TMemVar): TBytes; overload; 
 begin
-  Result := x.EncodeMem([$38], y);
+  Result := y.EncodeR([$38], x);
 end;
 
 function TSlackASM._cmp(x: TMemVar; y: TGPRegister): TBytes; overload; 
@@ -209,7 +209,7 @@ end;
 
 function TSlackASM._cmp(x: TImmediate; y: TGPRegister): TBytes; overload; 
 begin
-  Result := x.Encode([$80, $F8], y, 1);
+  Result := x.Encode([$80], y, $F8);
 end;
 
 
@@ -223,7 +223,7 @@ end;
 
 function TSlackASM._and(x: TGPRegister; y: TMemVar): TBytes; overload; 
 begin
-  Result := x.EncodeMem([$20], y);
+  Result := y.EncodeR([$20], x);
 end;
 
 function TSlackASM._and(x: TMemVar; y: TGPRegister): TBytes; overload; 
@@ -233,7 +233,7 @@ end;
 
 function TSlackASM._and(x: TImmediate; y: TGPRegister): TBytes; overload; 
 begin
-  Result := x.Encode([$80, $E0], y, 1);
+  Result := x.Encode([$80], y, $E0);
 end;
 
 
@@ -246,7 +246,7 @@ end;
 
 function TSlackASM._or(x: TGPRegister; y: TMemVar): TBytes; overload;
 begin
-  Result := x.EncodeMem([$08], y);
+  Result := y.EncodeR([$08], x);
 end;
 
 function TSlackASM._or(x: TMemVar; y: TGPRegister): TBytes; overload;
@@ -256,7 +256,7 @@ end;
 
 function TSlackASM._or(x: TImmediate; y: TGPRegister): TBytes; overload; 
 begin
-  Result := x.Encode([$80, $C8], y, 1);
+  Result := x.Encode([$80], y, $C8);
 end;
 
 
@@ -269,7 +269,7 @@ end;
 
 function TSlackASM._xor(x: TGPRegister; y: TMemVar): TBytes; overload;
 begin
-  Result := x.EncodeMem([$30], y);
+  Result := y.EncodeR([$30], x);
 end;
 
 function TSlackASM._xor(x: TMemVar; y: TGPRegister): TBytes; overload;
@@ -279,7 +279,7 @@ end;
 
 function TSlackASM._xor(x: TImmediate; y: TGPRegister): TBytes; overload; 
 begin
-  Result := x.Encode([$80, $F0], y, 1);
+  Result := x.Encode([$80], y, $F0);
 end;
 
 
@@ -293,7 +293,7 @@ end;
 
 function TSlackASM._add(x: TGPRegister; y: TMemVar): TBytes; overload; 
 begin
-  Result := x.EncodeMem([$00], y);
+  Result := y.EncodeR([$00], x);
 end;
 
 function TSlackASM._add(x: TMemVar; y: TGPRegister): TBytes; overload; 
@@ -303,7 +303,7 @@ end;
 
 function TSlackASM._add(x: TImmediate; y: TGPRegister): TBytes; overload; 
 begin
-  Result := x.Encode([$80, $C0], y, 1);
+  Result := x.Encode([$80], y, $C0);
 end;
 
 
@@ -316,7 +316,7 @@ end;
 
 function TSlackASM._adc(x: TGPRegister; y: TMemVar): TBytes; overload;
 begin
-  Result := x.EncodeMem([$10], y);
+  Result := y.EncodeR([$10], x);
 end;
 
 function TSlackASM._adc(x: TMemVar; y: TGPRegister): TBytes; overload;
@@ -326,7 +326,7 @@ end;
 
 function TSlackASM._adc(x: TImmediate; y: TGPRegister): TBytes; overload; 
 begin
-  Result := x.Encode([$80, $D0], y, 1);
+  Result := x.Encode([$80], y, $D0);
 end;
 
 
@@ -339,7 +339,7 @@ end;
 
 function TSlackASM._sub(x: TGPRegister; y: TMemVar): TBytes; overload;
 begin
-  Result := x.EncodeMem([$28], y);
+  Result := y.EncodeR([$28], x);
 end;
 
 function TSlackASM._sub(x: TMemVar; y: TGPRegister): TBytes; overload;
@@ -349,7 +349,7 @@ end;
 
 function TSlackASM._sub(x: TImmediate; y: TGPRegister): TBytes; overload; 
 begin
-  Result := x.Encode([$80, $E8], y, 1);
+  Result := x.Encode([$80], y, $E8);
 end;
 
 
@@ -362,7 +362,7 @@ end;
 
 function TSlackASM._sbb(x: TGPRegister; y: TMemVar): TBytes; overload;
 begin
-  Result := x.EncodeMem([$18], y);
+  Result := y.EncodeR([$18], x);
 end;
 
 function TSlackASM._sbb(x: TMemVar; y: TGPRegister): TBytes; overload;
@@ -372,7 +372,7 @@ end;
 
 function TSlackASM._sbb(x: TImmediate; y: TGPRegister): TBytes; overload; 
 begin
-  Result := x.Encode([$80, $D8], y, 1);
+  Result := x.Encode([$80], y, $D8);
 end;
 
 
@@ -445,7 +445,7 @@ end;
 function TSlackASM._imul(x: TImmediate; y: TGPRegister): TBytes; overload; 
 begin
   Assert(y.size <> 1, 'Illegal operand size BYTE');
-  Result := x.EncodeEx([$68], y,y, 0, $C0);
+  Result := x.EncodeEx([$68], y,y, $C0);
 end;
 
 
@@ -563,7 +563,7 @@ end;
 // -- SETc mem --
 function TSlackASM._setc(opcode:E_SETxx; dst: TMemVar): TBytes; overload;
 begin
-  Result := _AL.EncodeMem([$0F, Ord(opcode)], dst, -1, 1);
+  Result := dst.EncodeR([$0F, Ord(opcode)], _AX, -1, 1);
 end;
 
 

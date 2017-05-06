@@ -4,6 +4,15 @@
   
   Utilities
 [-----------------------------------------------------------------------------}
+{$MACRO ON}
+{$IFNDEF LAPE}{$DEFINE MemMove := Move}{$ENDIF}
+
+procedure FreeMethod(ptr: Pointer);
+begin
+  VirtualFree(ptr, 0, $8000);
+end;
+
+
 function GetIntSize(x: Int64; validSizes: TByteSet=[1,4]): Int32;
 begin
   if (Low(Int8)  <= x) and (High(Int8)  >= x) and (1 in validSizes) then Exit(1);
@@ -114,41 +123,52 @@ begin
   Result.Data := addr_to_bytes(x);
 end;
 
+{$IFDEF LAPE}
 operator is (memvar:TMemVar; Size:Byte): TMemVar;
 begin
   Result := memvar;
   Result.Reg := Result.Reg.Convert(Size);
   Result.Size := Size;
 end;
+{$ENDIF}
 
 
 // ---------------------------------------------------------------------------
 // FPC helpers
 {$IFDEF FPC}
-operator + (Left:TBytes; Right:TBytes): TMemVar;
-var i:Int32;
+operator + (Left:TBytes; Right:TBytes): TBytes;
 begin
   SetLength(Result, Length(Left) + Length(Right));
   MemMove(Left[0],  Result[0],            Length(Left));
   MemMove(Right[0], Result[Length(Left)], Length(Right));
 end;
 
-operator + (Left:array of Byte; Right:TBytes): TMemVar;
-var i:Int32;
+operator + (Left:array of Byte; Right:TBytes): TBytes;
 begin
   SetLength(Result, Length(Left) + Length(Right));
   MemMove(Left[0],  Result[0],            Length(Left));
   MemMove(Right[0], Result[Length(Left)], Length(Right));
 end;
 
-operator + (Left:TBytes; Right:array of Byte): TMemVar;
-var i:Int32;
+operator + (Left:TBytes; Right:array of Byte): TBytes;
 begin
   SetLength(Result, Length(Left) + Length(Right));
   MemMove(Left[0],  Result[0],            Length(Left));
   MemMove(Right[0], Result[Length(Left)], Length(Right));
+end;
+
+//XXX
+operator + (Left: TNativeCode; Right: TBytes): TNativeCode;
+var tmp: Int32;
+begin
+  tmp := Length(Left);
+  SetLength(Left, tmp+1);
+  SetLength(Left[tmp], Length(Right));
+  MemMove(Right[0], Left[tmp][0], Length(Right));
+  Result := Left;
 end;
 {$ENDIF}
+
 
 // ---------------------------------------------------------------------------
 // lape helpers

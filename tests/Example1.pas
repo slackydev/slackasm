@@ -47,7 +47,7 @@ begin
 
     Method := Finalize();                 // create a function for us to call
   finally
-  //WriteLn(Code);                        // (print the machinecode we produced)
+    WriteLn(Code);                        // (print the machinecode we produced)
     Free();                               // resets it
   end;
 

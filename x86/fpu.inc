@@ -1,9 +1,7 @@
 {-----------------------------------------------------------------------------]
   Author: Jarl K. Holta
   License: GNU Lesser GPL (http://www.gnu.org/licenses/lgpl.html)
-
-  !!!WORK IN PROGRESS!!!
-  ``````````````````````
+  
   Instructions that act on the FPU
 [-----------------------------------------------------------------------------}
 
@@ -117,7 +115,9 @@ end;
 
 // ===========================================================================
 // CONSTANTS FOR::: ADD, SUB, SUBR, MUL, DIV, DIVR
-const        // reg-reg | pop |   mem  | int-mem 
+const     
+  {$IFDEF LAPE}   
+             // reg-reg | pop |   mem  | int-mem 
   fpu_opcode = [$DC,$D8,  $DE,  $DC,$D8, $DE,$DA];
   fpu_memidx = 2;
   
@@ -127,6 +127,18 @@ const        // reg-reg | pop |   mem  | int-mem
   MUL_OFFSET  = [$C8, $C8, {mem} $08];
   DIV_OFFSET  = [$F8, $F0, {mem} $30];
   DIVR_OFFSET = [$F0, $F8, {mem} $38];
+  {$ELSE}
+                                   // reg-reg | pop |   mem  | int-mem 
+  fpu_opcode: array [0..6] of Byte = ($DC,$D8,  $DE,  $DC,$D8, $DE,$DA);
+  fpu_memidx = 2;
+  
+  ADD_OFFSET:  array [0..2] of Byte = ($C0, $C0, {mem} $00);
+  SUB_OFFSET:  array [0..2] of Byte = ($E8, $E0, {mem} $20);
+  SUBR_OFFSET: array [0..2] of Byte = ($E0, $E8, {mem} $28);
+  MUL_OFFSET:  array [0..2] of Byte = ($C8, $C8, {mem} $08);
+  DIV_OFFSET:  array [0..2] of Byte = ($F8, $F0, {mem} $30);
+  DIVR_OFFSET: array [0..2] of Byte = ($F0, $F8, {mem} $38);
+  {$ENDIF}
   
   
 

@@ -7,14 +7,14 @@
 
 // ----------------------------------------------------------------------------
 // return
-function TSlackASM._ret(): TBytes;
+function _ret(): TBytes;
 begin
   Result := ToBytes([$C3]);
 end;
 
 // ----------------------------------------------------------------------------
 // no operation
-function TSlackASM._nop(): TBytes;
+function _nop(): TBytes;
 begin
   Result := ToBytes([$90]);
 end;

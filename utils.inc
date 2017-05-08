@@ -4,13 +4,22 @@
   
   Utilities
 [-----------------------------------------------------------------------------}
-{$MACRO ON}
 {$IFNDEF LAPE}{$DEFINE MemMove := Move}{$ENDIF}
 
 procedure FreeMethod(ptr: Pointer);
 begin
   VirtualFree(ptr, 0, $8000);
 end;
+
+{$IFNDEF LAPE}
+function ToBytes(x: array of Byte): TBytes;
+begin
+  SetLength(Result, Length(x));
+  MemMove(x[0], Result[0], Length(Result));
+end;
+{$ELSE}
+type ToBytes = TBytes;
+{$ENDIF}
 
 
 function GetIntSize(x: Int64; validSizes: TByteSet=[1,4]): Int32;
@@ -89,8 +98,7 @@ begin
   Result.Data := {$IFDEF LAPE}[]{$ELSE}nil{$ENDIF};
 end;
 
-
-// stack variable construction
+// stack variable
 operator + (reg:TGPRegister; offset:Int32): TMemVar;
 begin
   Result.MemType := mtStack;
@@ -122,6 +130,19 @@ begin
   Result.Size := Size;
   Result.Data := addr_to_bytes(x);
 end;
+
+// offset mem address
+operator + (mem:TMemVar; offset:Int32): TMemVar;
+begin
+  Result := mem.Offset(offset);
+end;
+
+operator - (mem:TMemVar; offset:Int32): TMemVar;
+begin
+  Result := mem.Offset(-offset);
+end;
+
+
 
 {$IFDEF LAPE}
 operator is (memvar:TMemVar; Size:Byte): TMemVar;

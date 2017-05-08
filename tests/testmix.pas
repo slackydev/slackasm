@@ -13,11 +13,9 @@ begin
   with assembler := TSlackASM.Create() do
   try
     code += _mov(mem(x),  ebx);
-    code += _add(imm(10), eax);
-    code += _add(imm(10), ecx);
-    code += _add(imm(10), edx);
-    code += _add(imm(10), ebx);
-    code += _mov(ebx, mem(z));
+    code += _setc(SETNE, mem(x) is i8);
+    code += _setc(SETNE, mem(x) is i16);
+    code += _setc(SETNE, mem(x) is i32);
     code += _ret;
     Method := Finalize();
   finally

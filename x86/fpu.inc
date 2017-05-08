@@ -7,12 +7,12 @@
 
 // ===========================================================================
 // FLD - Load Float To FPU Stack (And Convert To 80bit Float)
-function TSlackASM._fld(src: TFPURegister): TBytes; overload; 
+function _fld(src: TFPURegister): TBytes; overload; 
 begin
   Result := ToBytes([$D9, $C0+Ord(src)]);
 end;
 
-function TSlackASM._fld(src: TMemVar): TBytes; overload;
+function _fld(src: TMemVar): TBytes; overload;
 begin
   case src.Size of
     f32: Result := src.FPUEncode([$D9]);
@@ -23,7 +23,7 @@ end;
 
 // ===========================================================================
 // FILD - Load Integer To FPU Stack (And Convert To 80bit Float)
-function TSlackASM._fild(src: TMemVar): TBytes; overload;
+function _fild(src: TMemVar): TBytes; overload;
 begin
   case src.Size of
     i16: Result := src.FPUEncode([$DF]);
@@ -36,12 +36,12 @@ end;
 
 // ===========================================================================
 // FST - Store Float To Memory
-function TSlackASM._fst(dst: TFPURegister): TBytes; overload; 
+function _fst(dst: TFPURegister): TBytes; overload; 
 begin
   Result := ToBytes([$DD, $D0+Ord(dst)]);
 end;
 
-function TSlackASM._fst(dst: TMemVar): TBytes; overload;
+function _fst(dst: TMemVar): TBytes; overload;
 begin
   case dst.size of
     f32: Result := dst.FPUEncode([$D9], $10);
@@ -53,7 +53,7 @@ end;
 
 // ===========================================================================
 // FIST - Store Integer To Memory
-function TSlackASM._fist(dst: TMemVar): TBytes;
+function _fist(dst: TMemVar): TBytes;
 begin
   case dst.size of
     i16: Result := dst.FPUEncode([$DF], $10, True);
@@ -65,12 +65,12 @@ end;
 
 // ===========================================================================
 // FSTP - Store Float To Memory And Pop
-function TSlackASM._fstp(dst: TFPURegister): TBytes; overload; 
+function _fstp(dst: TFPURegister): TBytes; overload; 
 begin
   Result := ToBytes([$DD, $D8+Ord(dst)]);
 end;
 
-function TSlackASM._fstp(dst: TMemVar): TBytes; overload;
+function _fstp(dst: TMemVar): TBytes; overload;
 begin
   case dst.size of 
     f32: Result := dst.FPUEncode([$D9], $18);
@@ -81,7 +81,7 @@ end;
 
 // ===========================================================================
 // FISTP - Store Integer To Memory And Pop
-function TSlackASM._fistp(dst: TMemVar): TBytes;
+function _fistp(dst: TMemVar): TBytes;
 begin
   case dst.Size of
     i16: Result := dst.FPUEncode([$DF], $18, True);
@@ -93,7 +93,7 @@ end;
 
 // ===========================================================================
 // FISTTP - Store Integer To Memory (Truncated) And Pop
-function TSlackASM._fisttp(dst: TMemVar): TBytes;
+function _fisttp(dst: TMemVar): TBytes;
 begin
   case dst.Size of
     i16: Result := dst.FPUEncode([$DF], $0D, True);
@@ -105,7 +105,7 @@ end;
 
 // ===========================================================================
 // FFREE - Free the register operand (Marks as Unused)
-function TSlackASM._ffree(reg: TFPURegister): TBytes; 
+function _ffree(reg: TFPURegister): TBytes; 
 begin
   Result := ToBytes([$DD, $C0+Ord(reg)]);
 end;
@@ -144,19 +144,19 @@ const
 
 // ===========================================================================
 // FADD - Floating Point Addition
-function TSlackASM._faddp(dst: TFPURegister=st1): TBytes; overload; 
+function _faddp(dst: TFPURegister=st1): TBytes; overload; 
 begin
   Result := ToBytes([fpu_opcode[2], ADD_OFFSET[0]+ord(dst)]);
 end;
 
-function TSlackASM._fadd(src, dst: TFPURegister): TBytes; overload; 
+function _fadd(src, dst: TFPURegister): TBytes; overload; 
 begin
   Assert((Ord(src) = 0) or (Ord(dst) = 0), 'Invalid Operand (Src or Dst must be st0)'); 
   if      (Ord(src) = 0) then Result := ToBytes([fpu_opcode[0], ADD_OFFSET[0]+ord(dst)])
   else if (Ord(dst) = 0) then Result := ToBytes([fpu_opcode[1], ADD_OFFSET[1]+ord(src)])
 end;
 
-function TSlackASM._fadd(mem: TMemVar): TBytes; overload;
+function _fadd(mem: TMemVar): TBytes; overload;
 begin
   case mem.Size of 
     f32: Result := mem.FPUEncode([fpu_opcode[3]], ADD_OFFSET[fpu_memidx]);
@@ -164,7 +164,7 @@ begin
   end;
 end;
 
-function TSlackASM._fiadd(mem: TMemVar): TBytes; 
+function _fiadd(mem: TMemVar): TBytes; 
 begin
   case mem.Size of 
     i16: Result := mem.FPUEncode([fpu_opcode[5]], ADD_OFFSET[fpu_memidx]);
@@ -176,19 +176,19 @@ end;
 
 // ===========================================================================
 // FSUB - Floating Point Subtraction
-function TSlackASM._fsubp(dst: TFPURegister=st1): TBytes; overload; 
+function _fsubp(dst: TFPURegister=st1): TBytes; overload; 
 begin
   Result := ToBytes([fpu_opcode[2], SUB_OFFSET[0]+ord(dst)]);
 end;
 
-function TSlackASM._fsub(src, dst: TFPURegister): TBytes; overload; 
+function _fsub(src, dst: TFPURegister): TBytes; overload; 
 begin
   Assert((Ord(src) = 0) or (Ord(dst) = 0), 'Invalid Operand (Src or Dst must be st0)'); 
   if      (Ord(src) = 0) then Result := ToBytes([fpu_opcode[0], SUB_OFFSET[0]+ord(dst)])
   else if (Ord(dst) = 0) then Result := ToBytes([fpu_opcode[1], SUB_OFFSET[1]+ord(src)])
 end;
 
-function TSlackASM._fsub(mem: TMemVar): TBytes; overload;
+function _fsub(mem: TMemVar): TBytes; overload;
 begin
   case mem.Size of 
     f32: Result := mem.FPUEncode([fpu_opcode[3]], SUB_OFFSET[fpu_memidx]);
@@ -196,7 +196,7 @@ begin
   end;
 end;
 
-function TSlackASM._fisub(mem: TMemVar): TBytes; 
+function _fisub(mem: TMemVar): TBytes; 
 begin
   case mem.Size of 
     i16: Result := mem.FPUEncode([fpu_opcode[5]], SUB_OFFSET[fpu_memidx]);
@@ -209,19 +209,19 @@ end;
 
 // ===========================================================================
 // FSUBR - Reverse Floating Point Subtraction
-function TSlackASM._fsubrp(dst: TFPURegister=st1): TBytes; overload; 
+function _fsubrp(dst: TFPURegister=st1): TBytes; overload; 
 begin
   Result := ToBytes([fpu_opcode[2], SUBR_OFFSET[0]+ord(dst)]);
 end;
 
-function TSlackASM._fsubr(src, dst: TFPURegister): TBytes; overload; 
+function _fsubr(src, dst: TFPURegister): TBytes; overload; 
 begin
   Assert((Ord(src) = 0) or (Ord(dst) = 0), 'Invalid Operand (Src or Dst must be st0)'); 
   if      (Ord(src) = 0) then Result := ToBytes([fpu_opcode[0], SUBR_OFFSET[0]+ord(dst)])
   else if (Ord(dst) = 0) then Result := ToBytes([fpu_opcode[1], SUBR_OFFSET[1]+ord(src)])
 end;
 
-function TSlackASM._fsubr(mem: TMemVar): TBytes; overload;
+function _fsubr(mem: TMemVar): TBytes; overload;
 begin
   case mem.Size of 
     f32: Result := mem.FPUEncode([fpu_opcode[3]], SUBR_OFFSET[fpu_memidx]);
@@ -229,7 +229,7 @@ begin
   end;
 end;
 
-function TSlackASM._fisubr(mem: TMemVar): TBytes; 
+function _fisubr(mem: TMemVar): TBytes; 
 begin
   case mem.Size of 
     i16: Result := mem.FPUEncode([fpu_opcode[5]], SUBR_OFFSET[fpu_memidx]);
@@ -242,19 +242,19 @@ end;
 
 // ===========================================================================
 // FMUL - Floating Point Multiplication
-function TSlackASM._fmulp(dst: TFPURegister=st1): TBytes; overload; 
+function _fmulp(dst: TFPURegister=st1): TBytes; overload; 
 begin
   Result := ToBytes([fpu_opcode[2], MUL_OFFSET[0]+ord(dst)]);
 end;
 
-function TSlackASM._fmul(src, dst: TFPURegister): TBytes; overload; 
+function _fmul(src, dst: TFPURegister): TBytes; overload; 
 begin
   Assert((Ord(src) = 0) or (Ord(dst) = 0), 'Invalid Operand (Src or Dst must be st0)'); 
   if      (Ord(src) = 0) then Result := ToBytes([fpu_opcode[0], MUL_OFFSET[0]+ord(dst)])
   else if (Ord(dst) = 0) then Result := ToBytes([fpu_opcode[1], MUL_OFFSET[1]+ord(src)])
 end;
 
-function TSlackASM._fmul(mem: TMemVar): TBytes; overload;
+function _fmul(mem: TMemVar): TBytes; overload;
 begin
   case mem.Size of 
     f32: Result := mem.FPUEncode([fpu_opcode[3]], MUL_OFFSET[fpu_memidx]);
@@ -262,7 +262,7 @@ begin
   end;
 end;
 
-function TSlackASM._fimul(mem: TMemVar): TBytes; 
+function _fimul(mem: TMemVar): TBytes; 
 begin
   case mem.Size of 
     i16: Result := mem.FPUEncode([fpu_opcode[5]], MUL_OFFSET[fpu_memidx]);
@@ -275,19 +275,19 @@ end;
 
 // ===========================================================================
 // FDIV - Floating Point Division
-function TSlackASM._fdivp(dst: TFPURegister=st1): TBytes; overload; 
+function _fdivp(dst: TFPURegister=st1): TBytes; overload; 
 begin
   Result := ToBytes([fpu_opcode[2], DIV_OFFSET[0]+ord(dst)]);
 end;
 
-function TSlackASM._fdiv(src, dst: TFPURegister): TBytes; overload; 
+function _fdiv(src, dst: TFPURegister): TBytes; overload; 
 begin
   Assert((Ord(src) = 0) or (Ord(dst) = 0), 'Invalid Operand (Src or Dst must be st0)'); 
   if      (Ord(src) = 0) then Result := ToBytes([fpu_opcode[0], DIV_OFFSET[0]+ord(dst)])
   else if (Ord(dst) = 0) then Result := ToBytes([fpu_opcode[1], DIV_OFFSET[1]+ord(src)])
 end;
 
-function TSlackASM._fdiv(mem: TMemVar): TBytes; overload;
+function _fdiv(mem: TMemVar): TBytes; overload;
 begin
   case mem.Size of 
     f32: Result := mem.FPUEncode([fpu_opcode[3]], DIV_OFFSET[fpu_memidx]);
@@ -295,7 +295,7 @@ begin
   end;
 end;
 
-function TSlackASM._fidiv(mem: TMemVar): TBytes; 
+function _fidiv(mem: TMemVar): TBytes; 
 begin
   case mem.Size of 
     i16: Result := mem.FPUEncode([fpu_opcode[5]], DIV_OFFSET[fpu_memidx]);
@@ -308,19 +308,19 @@ end;
 
 // ===========================================================================
 // FDIVR - Reverse Floating Point Division
-function TSlackASM._fdivrp(dst: TFPURegister=st1): TBytes; overload; 
+function _fdivrp(dst: TFPURegister=st1): TBytes; overload; 
 begin
   Result := ToBytes([fpu_opcode[2], DIVR_OFFSET[0]+ord(dst)]);
 end;
 
-function TSlackASM._fdivr(src, dst: TFPURegister): TBytes; overload; 
+function _fdivr(src, dst: TFPURegister): TBytes; overload; 
 begin
   Assert((Ord(src) = 0) or (Ord(dst) = 0), 'Invalid Operand (Src or Dst must be st0)'); 
   if      (Ord(src) = 0) then Result := ToBytes([fpu_opcode[0], DIVR_OFFSET[0]+ord(dst)])
   else if (Ord(dst) = 0) then Result := ToBytes([fpu_opcode[1], DIVR_OFFSET[1]+ord(src)])
 end;
 
-function TSlackASM._fdivr(mem: TMemVar): TBytes; overload;
+function _fdivr(mem: TMemVar): TBytes; overload;
 begin
   case mem.Size of 
     f32: Result := mem.FPUEncode([fpu_opcode[3]], DIVR_OFFSET[fpu_memidx]);
@@ -328,7 +328,7 @@ begin
   end;
 end;
 
-function TSlackASM._fidivr(mem: TMemVar): TBytes; 
+function _fidivr(mem: TMemVar): TBytes; 
 begin
   case mem.Size of 
     i16: Result := mem.FPUEncode([fpu_opcode[5]], DIVR_OFFSET[fpu_memidx]);
@@ -346,112 +346,112 @@ end;
 
 // ===========================================================================
 // FTst - Test Floating Point Value
-function TSlackASM._ftst(): TBytes; 
+function _ftst(): TBytes; 
 begin
   Result := ToBytes([$D9, $E4]);
 end;
 
 // ===========================================================================
 // FXam - Examine Floating Point Value
-function TSlackASM._fxam(): TBytes; 
+function _fxam(): TBytes; 
 begin
   Result := ToBytes([$D9, $E5]);
 end;
 
 // ===========================================================================
 // FAbs - Absolute Value - Clear the sign of st0
-function TSlackASM._fabs(): TBytes;
+function _fabs(): TBytes;
 begin
   Result := ToBytes([$D9, $E1]);
 end;
 
 // ===========================================================================
 // FRndInt - Round To Integer
-function TSlackASM._frndint(): TBytes;
+function _frndint(): TBytes;
 begin
   Result := ToBytes([$D9, $FC]);
 end;
 
 // ===========================================================================
 // FSqrt - Square Root
-function TSlackASM._fsqrt(): TBytes;
+function _fsqrt(): TBytes;
 begin
   Result := ToBytes([$D9, $FA]);
 end;
 
 // ===========================================================================
 // FCos - Cosine
-function TSlackASM._fcos(): TBytes;
+function _fcos(): TBytes;
 begin
   Result := ToBytes([$D9, $FF]);
 end;
 
 // ===========================================================================
 // FSin - Sine
-function TSlackASM._fsin(): TBytes;
+function _fsin(): TBytes;
 begin
   Result := ToBytes([$D9, $FE]);
 end;
 
 // ===========================================================================
 // FSinCos - Sine and Consine
-function TSlackASM._fsincos(): TBytes;
+function _fsincos(): TBytes;
 begin
   Result := ToBytes([$D9, $FB]);
 end;
 
 // ===========================================================================
 // FPTan - Partial Tangent
-function TSlackASM._fptan(): TBytes;
+function _fptan(): TBytes;
 begin
   Result := ToBytes([$D9, $F2]);
 end;
 
 // ===========================================================================
 // FPATan - Partial Arctangent
-function TSlackASM._fpatan(): TBytes;
+function _fpatan(): TBytes;
 begin
   Result := ToBytes([$D9, $F3]);
 end;
 
 // ===========================================================================
 // FPRem - Partial Remainder (Round to Zero)
-function TSlackASM._fprem(): TBytes;
+function _fprem(): TBytes;
 begin
   Result := ToBytes([$D9, $F8]);
 end;
 
 // ===========================================================================
 // FPRem1 - Partial Remainder (Round to Nearest)
-function TSlackASM._fprem1(): TBytes;
+function _fprem1(): TBytes;
 begin
   Result := ToBytes([$D9, $F5]);
 end;
 
 // ===========================================================================
 // FScale - Scale
-function TSlackASM._fscale(): TBytes;
+function _fscale(): TBytes;
 begin
   Result := ToBytes([$D9, $FD]);
 end;
 
 // ===========================================================================
 // FXtract - Extract Exponent and Mantissa
-function TSlackASM._fxtract(): TBytes;
+function _fxtract(): TBytes;
 begin
   Result := ToBytes([$D9, $F4]);
 end;
 
 // ===========================================================================
 // FYL2X - Compute "st1 * log_2(st0)" - Store in st1
-function TSlackASM._fyl2x(): TBytes;
+function _fyl2x(): TBytes;
 begin
   Result := ToBytes([$D9, $F1]);
 end;
 
 // ===========================================================================
 // FYL2XP1 - Compute "st1 * log_2(st0 + 1.0)" - Store in st1
-function TSlackASM._fyl2xp1(): TBytes;
+function _fyl2xp1(): TBytes;
 begin
   Result := ToBytes([$D9, $F9]);
 end;

@@ -42,6 +42,7 @@ type
       function EncodeR(opcode:array of Byte; other: TGPRegister; Offset:Int16=-1; OffsetIdx:Int8=0): TBytes;
       function FPUEncode(opcode:array of Byte; Offset:Int16=0; Data16:Boolean=False): TBytes;
       function Offset(n:Int32): TMemVar;
+      function AsType(n:Byte): TMemVar;
     {$ENDIF}
   end;
   

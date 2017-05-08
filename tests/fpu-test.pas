@@ -3,30 +3,26 @@ program lapefunc;
 {$I slackasm/assembler.pas}
 {$X+}
 
-procedure LapeFuncPrologue(var assembler:TSlackASM; argCount:Word);
-var
-  i:Int32;
+procedure LapeFuncPrologue(var a:TSlackASM; argCount:Word);
+var i:Int32;
 begin
-  with assembler do
+  a.Code += _push(ebp);
+  a.Code += _mov(esp, ebp);
+  a.Code += _mov(ebp+08, ebx);
+  for i:=0 to argCount-1 do
   begin
-    code += _push(ebp);
-    code += _mov(esp, ebp);
-    code += _mov(ebp+08, ebx);
-    for i:=0 to argCount-1 do
-    begin
-      code += _mov(ref(ebx), ecx);
-      code += _push(ecx);
-      if i <> argCount-1 then
-        code += _add(imm(4), ebx);
-    end;
+    a.Code += _mov(ref(ebx), ecx);
+    a.Code += _push(ecx);
+    if i <> argCount-1 then
+      a.Code += _add(imm(4), ebx);
   end;
 end;
 
-procedure LapeFuncEpilogue(var assembler:TSlackASM; argCount:Int32);
+procedure LapeFuncEpilogue(var a:TSlackASM; argCount:Int32);
 begin
-  assembler.code += assembler._add(imm(4*argCount), esp);
-  assembler.code += assembler._pop(ebp);
-  assembler.code += assembler._ret;
+  a.Code += _add(imm(4*argCount), esp);
+  a.Code += _pop(ebp);
+  a.Code += _ret;
 end;
 
 
@@ -39,11 +35,11 @@ begin
   with assembler := TSlackASM.Create() do
   try
     LapeFuncPrologue(assembler, NUM_ARGS);
-    code += _mov(ebp-4, ebx) + _fld(ref(ebx) is sz1);
-    code += _mov(ebp-8, ebx) + _fld(ref(ebx) is sz2);
+    code += _mov(ebp-4, ebx) + _fld(ref(ebx).AsType(sz1));
+    code += _mov(ebp-8, ebx) + _fld(ref(ebx).AsType(sz2));
     code += _fmulp;
     code += _mov(ebp+12, ebx);
-    code += _fstp(ref(ebx) is f64);
+    code += _fstp(ref(ebx).AsType(f64));
     LapeFuncEpilogue(assembler, NUM_ARGS);
     Result := Finalize();
   finally

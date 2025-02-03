@@ -9,7 +9,7 @@ var
   x: Int32 = 2;
   y: Int32 = 100;
   z,tmp,i: Int32;
-  lim: Int32 = 25000000 - 1;
+  lim: Int32 = 50000000 - 1;
   t: Int64;
 begin
   //---- Pure lape version which we'll write
@@ -23,10 +23,12 @@ begin
   WriteLn(Format('Used %4d ms', [GetTickCount()-t]),': ',  [x, y, z, i]);
 
 
-
   //---- Now let's do that with assembly (using a do..while loop)
   with assembler := TSlackASM.Create() do
   try
+    code += _push(eax);                   // for cleanup as we touch these!
+    code += _push(ebx);       
+  
     code += _mov(imm(0), ebx);            // move 0 to %ebx (it's kept in %ebx, as the loop counter)
     var lbl1 := Location;                 // make a label so we can jump here
     //loop body -->
@@ -40,6 +42,9 @@ begin
     code += _jle(RelLoc(lbl1));           // if %ebx <= lim then goto lbl1
     //<-- loop end
     code += _mov(ebx, mem(i));            // move %ebx to `i`
+
+    code += _pop(ebx);                    // recover ebx, eax
+    code += _pop(eax); 
     code += _ret;                         // return
 
     Method := Finalize();                 // create a function for us to call
